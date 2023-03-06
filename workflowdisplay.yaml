@@ -1,8 +1,8 @@
 name: classical_networking_workflow
 displayname: STUFF
 Views:
--   name: Summary List
-    displayname: Summary List
+-   name: File Summary List
+    displayname: File Summary List
     viewname: summarylist
     displaytype: datatable
     parameters:
