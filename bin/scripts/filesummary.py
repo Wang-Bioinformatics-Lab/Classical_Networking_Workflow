@@ -33,12 +33,7 @@ def main():
     args = parser.parse_args()
 
     spectra_files = glob.glob(os.path.join(args.spectra_folder, "*"))
-    #params_object = ming_proteosafe_library.parse_xml_file(open(args.workflow_parameters))
-    #mangled_mapping = ming_proteosafe_library.get_mangled_file_mapping(params_object)
-    #spectra_files = ming_fileio_library.list_files_in_dir(args.spectra_folder)
-
     spectra_files.sort()
-
 
     tempresults_folder = "tempresults"
     try:
@@ -55,8 +50,6 @@ def main():
 
         parameter_list.append(param_dict)
 
-    #for param_dict in parameter_list:
-    #    search_wrapper(param_dict)
     print("Parallel to execute", len(parameter_list))
     ming_parallel_library.run_parallel_job(summary_wrapper, parameter_list, 10)
 
@@ -79,27 +72,6 @@ def main():
         except:
             #raise
             print("Error", input_file)
-
-        #print(result_list)
-        #full_result_list += result_list
-    
-    # used_files = set()
-    # for result_object in full_result_list:
-    #     mangled_name = os.path.basename(result_object["Filename"])
-    #     full_path = mangled_mapping[mangled_name]
-    #     result_object["full_CCMS_path"] = full_path
-    #     result_object["CCMS_filename"] = os.path.basename(full_path)
-    #     used_files.add(full_path)
-
-    # for mangled_name in spectra_files:
-    #     full_path = mangled_mapping[os.path.basename(mangled_name)]
-    #     if full_path in used_files:
-    #         continue
-
-    #     output_dict = {}
-    #     output_dict["full_CCMS_path"] = full_path
-    #     output_dict["CCMS_filename"] = os.path.basename(full_path)
-    #     full_result_list.append(output_dict)
 
     pd.DataFrame(full_result_list).to_csv(args.result_file, sep="\t", index=False)
 
