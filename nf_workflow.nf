@@ -1,6 +1,6 @@
 #!/usr/bin/env nextflow
 
-params.input = "README.md"
+params.input_spectra = "data/spectra"
 
 // Workflow Boiler Plate
 params.OMETALINKING_YAML = "flow_filelinking.yaml"
@@ -8,18 +8,18 @@ params.OMETAPARAM_YAML = "job_parameters.yaml"
 
 TOOL_FOLDER = "$baseDir/bin"
 
-process processData {
+process filesummary {
     publishDir "./nf_output", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    file input from Channel.fromPath(params.input)
+    file inputSpectra from Channel.fromPath(params.input_spectra)
 
     output:
-    file 'output.tsv' into records_ch
+    file 'result.tsv' into records_ch
 
     """
-    python $TOOL_FOLDER/script.py $input output.tsv
+    python $TOOL_FOLDER/scripts/filesummary.py $inputSpectra result.tsv $TOOL_FOLDER/binaries/msaccess
     """
 }
