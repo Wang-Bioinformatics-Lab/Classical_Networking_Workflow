@@ -6,14 +6,20 @@ Views:
     viewname: summarylist
     displaytype: datatable
     parameters:
-        filename: output/summary.tsv
+        filename: nf_output/result.tsv
         columns:
-            -   title: "View LCMS"
-                data: filename
-            -   title: "filename"
-                data: filename
+            -   title: "Filename"
+                data: "Filename"
+            -   title: "Vendor"
+                data: Vendor
+            -   title: "Model"
+                data: Model
+            -   title: "MS1"
+                data: MS1
+            -   title: "MS2"
+                data: MS2
         columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
             return `
-            <a target="_blank" href="/dashboards/lcms?usi=mzspec:GNPS2-${task}:${encodeURIComponent(row["filename"])}">View LCMS - mzspec:GNPS2-${task}:${row["filename"]}</a>
+            <a target="_blank" href="/dashboards/lcms?usi=mzspec:GNPS2-${task}:${encodeURIComponent(row["Filename"])}">View LCMS - ${row["Filename"]}</a>
             `;}}]'
             

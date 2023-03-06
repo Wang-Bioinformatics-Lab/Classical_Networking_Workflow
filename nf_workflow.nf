@@ -17,9 +17,9 @@ process filesummary {
     file inputSpectra from Channel.fromPath(params.input_spectra)
 
     output:
-    file 'result.tsv' into records_ch
+    file 'summaryresult.tsv' into records_ch
 
     """
-    python $TOOL_FOLDER/scripts/filesummary.py $inputSpectra result.tsv $TOOL_FOLDER/binaries/msaccess
+    python $TOOL_FOLDER/scripts/filesummary.py $inputSpectra summaryresult.tsv $TOOL_FOLDER/binaries/msaccess
     """
 }
