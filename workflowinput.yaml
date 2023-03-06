@@ -1,6 +1,6 @@
-workflowname: template_nextflow_workflow
-workflowdescription: template_nextflow_workflow
-workflowlongdescription: This is a template nextflow workflow for GNPS2
+workflowname: classical_networking_workflow
+workflowdescription: classical_networking_workflow
+workflowlongdescription: This is Classical Molecular Networking for GNPS2
 workflowversion: "0.1"
 workflowfile: nf_workflow.nf
 workflowautohide: false
