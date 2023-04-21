@@ -16,10 +16,30 @@ def write_params(input_spectra_folder, tool_path, params_filename):
     all_spectrum_files = all_mgf_files + all_mzxml_files + all_mzml_files
 
     with open(params_filename, "w") as params_file:
-        params_file.write("CLUSTER_MIN_SIZE=2\n")
+        params_file.write("CLUSTER_MODEL=LTQ_TRYP\n")
+        params_file.write("CLUST_RANK_FILTER=6\n")
+        params_file.write("CORRECT_PM=no\n")
+        params_file.write("GUESS_CHARGE=no\n")
+        params_file.write("MIN_SPECTRUM_QUALITY=0.0\n")
+
+        # Basic Tolerances
+        params_file.write("TOLERANCE_PEAK=\n".format(0.5))
+        params_file.write("TOLERANCE_PM={}\n".format(2.0))
+        
+        # Window Filtering
+        params_file.write("RANK_FILTER=6\n")
+        params_file.write("RANK_FILTER_RADIUS=50.0\n")
+        params_file.write("MIN_PEAK_INT=0.0\n")
+
+        # Filtering
+        params_file.write("FILTER_PRECURSOR_WINDOW={}\n".format(1))
+        params_file.write("FILTER_STDDEV_PEAK_INT=0.0\n")
+
+
+        params_file.write("CLUSTER_MIN_SIZE={}\n".format(2))
+
         params_file.write("EXE_DIR={}\n".format(tool_path))
         params_file.write("INPUT_SPECS_MS={}\n".format(";".join(all_spectrum_files)))
-
     
 def main():
     # Parse arguments
@@ -48,6 +68,7 @@ def main():
     spectrum_collection = ming_spectrum_library.SpectrumCollection(specs_mgf_filename)
     spectrum_collection.load_from_mgf()
 
+    # TODO: we need to make sure that there are empty spectra
     spectrum_collection.save_to_mgf(open(specs_mgf_filename, "w"), renumber_scans=False)
 
     # Do clean up out output spectra folder
