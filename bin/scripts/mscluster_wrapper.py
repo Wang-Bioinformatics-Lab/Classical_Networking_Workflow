@@ -23,7 +23,7 @@ def write_params(input_spectra_folder, tool_path, params_filename):
         params_file.write("MIN_SPECTRUM_QUALITY=0.0\n")
 
         # Basic Tolerances
-        params_file.write("TOLERANCE_PEAK=\n".format(0.5))
+        params_file.write("TOLERANCE_PEAK={}\n".format(0.5))
         params_file.write("TOLERANCE_PM={}\n".format(2.0))
         
         # Window Filtering
@@ -47,6 +47,7 @@ def main():
     parser.add_argument('input_spectra_folder', help='Input Spectra Folder')
     parser.add_argument('tool_dir', help='tool_dir')
     parser.add_argument('output_spectra_folder', help='Output Spectra Folder')
+    parser.add_argument('final_output_folder', help='final_output_folder')
     
     args = parser.parse_args()
 
@@ -57,7 +58,7 @@ def main():
     # Running the data
     mainspecnets_binary = os.path.join(args.tool_dir, "main_specnets")
 
-    cmd = "{} {} -ll 9 -f mscluster".format(mainspecnets_binary, parameters_filename)
+    cmd = "{} {} -ll 0 -f mscluster".format(mainspecnets_binary, parameters_filename)
     ret_code = os.system(cmd)
 
     if ret_code != 0:
@@ -69,7 +70,20 @@ def main():
     spectrum_collection.load_from_mgf()
 
     # TODO: we need to make sure that there are empty spectra
-    spectrum_collection.save_to_mgf(open(specs_mgf_filename, "w"), renumber_scans=False)
+    output_mgf_filename = os.path.join(args.final_output_folder, "specs_ms.mgf")
+    spectrum_collection.save_to_mgf(open(output_mgf_filename, "w"), renumber_scans=False)
+
+    # Creating the clusterinfo file
+    path_to_clusterinfo = os.path.join(args.tool_dir, "clusterinfo")
+    clusterinfo_file = os.path.join(args.final_output_folder, "clusterinfo.tsv")
+    clustersummary_file = os.path.join(args.final_output_folder, "clustersummary.tsv")
+    cmd = "{} --outfile {} --out-summary-file {}".format(path_to_clusterinfo, clusterinfo_file, clustersummary_file)
+    os.system(cmd)
+
+    
+
+    
+
 
     # Do clean up out output spectra folder
     # all_pklbin_files = glob.glob(os.path.join(output_spectra_folder, "specs_ms_*.pklbin"))

@@ -1,4 +1,5 @@
 #!/usr/bin/env nextflow
+nextflow.enable.dsl=2
 
 params.input_spectra = "data/spectra"
 
@@ -14,10 +15,10 @@ process filesummary {
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    file inputSpectra from Channel.fromPath(params.input_spectra)
+    file inputSpectra
 
     output:
-    file 'summaryresult.tsv' into records_ch
+    file 'summaryresult.tsv'
 
     """
     python $TOOL_FOLDER/scripts/filesummary.py $inputSpectra summaryresult.tsv $TOOL_FOLDER/binaries/msaccess
@@ -30,15 +31,24 @@ process mscluster {
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    file inputSpectra from Channel.fromPath(params.input_spectra)
+    file inputSpectra
 
-    // output:
-    // file 'summaryresult.tsv' into records_ch
+    output:
+    file 'output/specs_ms.mgf'
+    file 'output/clusterinfo.tsv'
+    file 'output/clustersummary.tsv'
 
     """
-    mkdir spectra
-    python $TOOL_FOLDER/scripts/mscluster_wrapper.py $inputSpectra $TOOL_FOLDER/binaries spectra
+    mkdir output
+    python $TOOL_FOLDER/scripts/mscluster_wrapper.py $inputSpectra $TOOL_FOLDER/binaries spectra output
     """
 
 
+}
+
+
+workflow {
+    input_spectra_ch = Channel.fromPath(params.input_spectra)
+    filesummary(input_spectra_ch)
+    mscluster(input_spectra_ch)
 }
