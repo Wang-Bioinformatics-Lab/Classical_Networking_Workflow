@@ -60,7 +60,6 @@ def main():
 
     parser.add_argument('--min_peak_intensity', default="0.0", help='min_peak_intensity')
     
-    
     args = parser.parse_args()
 
     # Writing the parameters
