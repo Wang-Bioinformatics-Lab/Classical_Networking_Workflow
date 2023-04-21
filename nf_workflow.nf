@@ -3,6 +3,8 @@ nextflow.enable.dsl=2
 
 params.input_spectra = "data/spectra"
 
+params.min_cluster_size = "2"
+
 params.pm_tolerance = "2.0"
 params.fragment_tolerance = "0.5"
 
@@ -51,6 +53,7 @@ process mscluster {
     $inputSpectra $TOOL_FOLDER/binaries \
     spectra \
     output \
+    --min_cluster_size $params.min_cluster_size \
     --pm_tolerance $params.pm_tolerance \
     --fragment_tolerance $params.fragment_tolerance \
     --min_peak_intensity $params.min_peak_intensity

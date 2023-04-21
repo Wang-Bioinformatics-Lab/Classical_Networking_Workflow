@@ -7,7 +7,10 @@ import argparse
 import ming_spectrum_library
 
 def write_params(input_spectra_folder, tool_path, output_params_filename,
-                 pm_tolerance=2.0, fragment_tolerance=0.5, min_peak_intensity=0.0):
+                 min_cluster_size=2,
+                 pm_tolerance=2.0, 
+                 fragment_tolerance=0.5, 
+                 min_peak_intensity=0.0):
 
     # listing all files
     all_mgf_files = glob.glob(os.path.join(input_spectra_folder, "*.mgf"))
@@ -37,7 +40,7 @@ def write_params(input_spectra_folder, tool_path, output_params_filename,
         params_file.write("FILTER_STDDEV_PEAK_INT=0.0\n")
 
 
-        params_file.write("CLUSTER_MIN_SIZE={}\n".format(2))
+        params_file.write("CLUSTER_MIN_SIZE={}\n".format(min_cluster_size))
 
         params_file.write("EXE_DIR={}\n".format(tool_path))
         params_file.write("INPUT_SPECS_MS={}\n".format(";".join(all_spectrum_files)))
@@ -50,6 +53,8 @@ def main():
     parser.add_argument('output_spectra_folder', help='Output Spectra Folder')
     parser.add_argument('final_output_folder', help='final_output_folder')
 
+    parser.add_argument('--min_cluster_size', default="2", help='min_cluster_size')
+
     parser.add_argument('--pm_tolerance', default="2.0", help='pm_tolerance')
     parser.add_argument('--fragment_tolerance', default="0.5", help='fragment_tolerance')
 
@@ -61,6 +66,7 @@ def main():
     # Writing the parameters
     parameters_filename = "mscluster.params"
     write_params(args.input_spectra_folder, args.tool_dir, parameters_filename, 
+                 min_cluster_size=args.min_cluster_size,
                  pm_tolerance=args.pm_tolerance, 
                  fragment_tolerance=args.fragment_tolerance, 
                  min_peak_intensity=args.min_peak_intensity)
@@ -90,21 +96,13 @@ def main():
     cmd = "{} --outfile {} --out-summary-file {}".format(path_to_clusterinfo, clusterinfo_file, clustersummary_file)
     os.system(cmd)
 
-    
-
-    
-
-
     # Do clean up out output spectra folder
-    # all_pklbin_files = glob.glob(os.path.join(output_spectra_folder, "specs_ms_*.pklbin"))
-
-
+    all_pklbin_files = glob.glob(os.path.join(args.output_spectra_folder, "specs_ms_*.pklbin"))
 
     """Disabling Removing Files because they are needed in a later step"""
-    #TODO: Move clusterinfo into this step so we can get rid of these files. 
-    #for filetoremove in all_pklbin_files:
-    #    print("Removing ", filetoremove)
-    #    os.remove(filetoremove)
+    for filetoremove in all_pklbin_files:
+       print("Removing ", filetoremove)
+       os.remove(filetoremove)
 
 if __name__ == "__main__":
     main()
