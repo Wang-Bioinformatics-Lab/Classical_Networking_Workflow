@@ -23,3 +23,22 @@ process filesummary {
     python $TOOL_FOLDER/scripts/filesummary.py $inputSpectra summaryresult.tsv $TOOL_FOLDER/binaries/msaccess
     """
 }
+
+process mscluster {
+    publishDir "./nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file inputSpectra from Channel.fromPath(params.input_spectra)
+
+    // output:
+    // file 'summaryresult.tsv' into records_ch
+
+    """
+    mkdir spectra
+    python $TOOL_FOLDER/scripts/mscluster_wrapper.py $inputSpectra $TOOL_FOLDER/binaries spectra
+    """
+
+
+}
