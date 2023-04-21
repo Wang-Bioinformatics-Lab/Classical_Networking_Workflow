@@ -28,4 +28,18 @@ Views:
             -   title: "# spectra"
                 data: "number of spectra"
 
+
+-   name: Library Results
+    displayname: Library Results
+    viewname: librarymatches
+    displaytype: datatable
+    parameters:
+        filename: nf_output/library/merged_results_with_gnps.tsv
+        columns:
+            -   title: "Cluster"
+                data: "cluster index"
+            -   title: "Parent mass"
+                data: "parent mass"
+            -   title: "# spectra"
+                data: "number of spectra"
     

@@ -5,7 +5,7 @@ nextflow.enable.dsl=2
 params.input_spectra = "data/spectra"
 
 // Libraries
-params.inputlibraries = "data/library"
+params.input_libraries = "data/library"
 
 // Parameters
 params.min_cluster_size = "2"
@@ -104,7 +104,7 @@ process librarymergeResults {
 }
 
 process librarygetGNPSAnnotations {
-    publishDir "./nf_output", mode: 'copy'
+    publishDir "./nf_output/library", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -129,7 +129,7 @@ workflow {
     (clustered_spectra_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch)
 
     // Library Search
-    libraries_ch = Channel.fromPath(params.inputlibraries + "/*.mgf" )
+    libraries_ch = Channel.fromPath(params.input_libraries + "/*.mgf" )
     search_results_ch = librarySearchData(libraries_ch, clustered_spectra_ch)
     merged_results_ch = librarymergeResults(search_results_ch.collect())
     librarygetGNPSAnnotations(merged_results_ch)
