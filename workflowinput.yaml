@@ -19,3 +19,41 @@ parameterlist:
       optional: false
       selectsinglefile: false
       folderunroll: true
+
+    - displayname: General Parameters
+      paramtype: section
+
+    - displayname: Precursor Ion Tolerance
+      paramtype: text
+      nf_paramname: pm_tolerance
+      formplaceholder: Enter the pm_tolerance
+      formvalue: "2.0"
+      tooltip: "pm_tolerance"
+
+    - displayname: Fragment Ion Tolerance
+      paramtype: text
+      nf_paramname: fragment_tolerance
+      formplaceholder: Enter the fragment_tolerance
+      formvalue: "0.5"
+      tooltip: "fragment_tolerance"
+
+    - displayname: Clustering Parameters
+      paramtype: section
+
+    - displayname: Min Cluster Size
+      paramtype: text
+      nf_paramname: min_cluster_size
+      formplaceholder: Enter the min_cluster_size
+      formvalue: "2"
+      tooltip: "min_cluster_size"
+
+    - displayname: Advanced Filtering Parameters
+      paramtype: section
+
+    - displayname: Min Peak Intensity
+      paramtype: text
+      nf_paramname: min_peak_intensity
+      formplaceholder: Enter the min_peak_intensity
+      formvalue: "0.0"
+      tooltip: "min_peak_intensity"
+

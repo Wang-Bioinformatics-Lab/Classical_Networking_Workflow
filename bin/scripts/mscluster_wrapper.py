@@ -6,7 +6,8 @@ import glob
 import argparse
 import ming_spectrum_library
 
-def write_params(input_spectra_folder, tool_path, params_filename):
+def write_params(input_spectra_folder, tool_path, output_params_filename,
+                 pm_tolerance=2.0, fragment_tolerance=0.5, min_peak_intensity=0.0):
 
     # listing all files
     all_mgf_files = glob.glob(os.path.join(input_spectra_folder, "*.mgf"))
@@ -15,7 +16,7 @@ def write_params(input_spectra_folder, tool_path, params_filename):
 
     all_spectrum_files = all_mgf_files + all_mzxml_files + all_mzml_files
 
-    with open(params_filename, "w") as params_file:
+    with open(output_params_filename, "w") as params_file:
         params_file.write("CLUSTER_MODEL=LTQ_TRYP\n")
         params_file.write("CLUST_RANK_FILTER=6\n")
         params_file.write("CORRECT_PM=no\n")
@@ -23,13 +24,13 @@ def write_params(input_spectra_folder, tool_path, params_filename):
         params_file.write("MIN_SPECTRUM_QUALITY=0.0\n")
 
         # Basic Tolerances
-        params_file.write("TOLERANCE_PEAK={}\n".format(0.5))
-        params_file.write("TOLERANCE_PM={}\n".format(2.0))
+        params_file.write("TOLERANCE_PEAK={}\n".format(fragment_tolerance))
+        params_file.write("TOLERANCE_PM={}\n".format(pm_tolerance))
         
         # Window Filtering
         params_file.write("RANK_FILTER=6\n")
         params_file.write("RANK_FILTER_RADIUS=50.0\n")
-        params_file.write("MIN_PEAK_INT=0.0\n")
+        params_file.write("MIN_PEAK_INT={}\n".format(min_peak_intensity))
 
         # Filtering
         params_file.write("FILTER_PRECURSOR_WINDOW={}\n".format(1))
@@ -48,12 +49,21 @@ def main():
     parser.add_argument('tool_dir', help='tool_dir')
     parser.add_argument('output_spectra_folder', help='Output Spectra Folder')
     parser.add_argument('final_output_folder', help='final_output_folder')
+
+    parser.add_argument('--pm_tolerance', default="2.0", help='pm_tolerance')
+    parser.add_argument('--fragment_tolerance', default="0.5", help='fragment_tolerance')
+
+    parser.add_argument('--min_peak_intensity', default="0.0", help='min_peak_intensity')
+    
     
     args = parser.parse_args()
 
     # Writing the parameters
     parameters_filename = "mscluster.params"
-    write_params(args.input_spectra_folder, args.tool_dir, parameters_filename)
+    write_params(args.input_spectra_folder, args.tool_dir, parameters_filename, 
+                 pm_tolerance=args.pm_tolerance, 
+                 fragment_tolerance=args.fragment_tolerance, 
+                 min_peak_intensity=args.min_peak_intensity)
 
     # Running the data
     mainspecnets_binary = os.path.join(args.tool_dir, "main_specnets")

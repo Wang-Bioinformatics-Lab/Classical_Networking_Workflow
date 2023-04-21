@@ -1,25 +1,31 @@
 name: classical_networking_workflow
 displayname: STUFF
 Views:
--   name: File Summary List
-    displayname: File Summary List
-    viewname: summarylist
+-   name: Files Summary
+    displayname: Files Summary
+    viewname: filesummary
     displaytype: datatable
     parameters:
-        filename: nf_output/result.tsv
+        filename: nf_output/summaryresult.tsv
         columns:
             -   title: "Filename"
                 data: "Filename"
             -   title: "Vendor"
-                data: Vendor
+                data: "Vendor"
             -   title: "Model"
-                data: Model
-            -   title: "MS1"
-                data: MS1
-            -   title: "MS2"
-                data: MS2
-        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
-            return `
-            <a target="_blank" href="/dashboards/lcms?usi=mzspec:GNPS2-${task}:${encodeURIComponent(row["Filename"])}">View LCMS - ${row["Filename"]}</a>
-            `;}}]'
-            
+                data: "Model"
+-   name: Cluster Summary
+    displayname: Cluster Summary
+    viewname: clustersummary
+    displaytype: datatable
+    parameters:
+        filename: nf_output/output/clustersummary.tsv
+        columns:
+            -   title: "Cluster"
+                data: "cluster index"
+            -   title: "Parent mass"
+                data: "parent mass"
+            -   title: "# spectra"
+                data: "number of spectra"
+
+    
