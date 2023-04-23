@@ -2,10 +2,13 @@
 nextflow.enable.dsl=2
 
 // Spectra as input
-params.input_spectra = "data/spectra"
+params.input_spectra = "data/input_spectra"
 
 // Libraries
 params.input_libraries = "data/library"
+
+// Metadata
+params.input_metadata = "data/metadata.tsv"
 
 // Parameters
 params.min_cluster_size = "2"
@@ -16,7 +19,13 @@ params.fragment_tolerance = "0.5"
 // Filtereing
 params.min_peak_intensity = "0.0"
 
+// Molecular Networking Options
+params.similarity = "gnps"
 
+params.parallelism = 24
+params.networking_min_matched_peaks = 6
+params.networking_min_cosine = 0.7
+params.networking_max_shift = 1000
 
 // Workflow Boiler Plate
 params.OMETALINKING_YAML = "flow_filelinking.yaml"
@@ -121,6 +130,77 @@ process librarygetGNPSAnnotations {
     """
 }
 
+// Molecular Networking
+process networkingGNPSPrepParams {
+    publishDir "./nf_output/networking", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file spectrum_file
+
+    output:
+    file "params/*"
+
+    """
+    mkdir params
+    python $TOOL_FOLDER/scripts/prep_molecular_networking_parameters.py \
+        "$spectrum_file" \
+        "params" \
+        --parallelism "$params.parallelism" \
+        --min_matched_peaks "$params.networking_min_matched_peaks" \
+        --ms2_tolerance "$params.fragment_tolerance" \
+        --pm_tolerance "$params.pm_tolerance" \
+        --min_cosine "$params.networking_min_cosine" \
+        --max_shift "$params.networking_max_shift"
+    """
+}
+
+process calculatePairs {
+    publishDir "./nf_output/temp_pairs", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file spectrum_file
+    each file(params_file)
+
+    output:
+    file "*_aligns.tsv" optional true
+
+    """
+    $TOOL_FOLDER/binaries/main_execmodule \
+        ExecMolecularParallelPairs \
+        "$params_file" \
+        -ccms_INPUT_SPECTRA_MS2 $spectrum_file \
+        -ccms_output_aligns ${params_file}_aligns.tsv
+    """
+}
+
+// Creating the metadata file
+// TODO: Finish this
+process createMetadataFile {
+    publishDir "./nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file "metadata.tsv"
+
+    output:
+    file "merged_metadata.tsv"
+
+    //script in case its NO_FILE
+    
+    """
+    python $TOOL_FOLDER/scripts/merge_metadata.py \
+    metadata.tsv \
+    merged_metadata.tsv
+    """
+}
+
+
+
 workflow {
     input_spectra_ch = Channel.fromPath(params.input_spectra)
 
@@ -133,5 +213,11 @@ workflow {
     search_results_ch = librarySearchData(libraries_ch, clustered_spectra_ch)
     merged_results_ch = librarymergeResults(search_results_ch.collect())
     librarygetGNPSAnnotations(merged_results_ch)
+
+    // Networking
+    params_ch = networkingGNPSPrepParams(clustered_spectra_ch)
+    networking_results_temp_ch = calculatePairs(clustered_spectra_ch, params_ch.collect())
+
+    networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
 
 }

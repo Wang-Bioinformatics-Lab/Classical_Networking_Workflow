@@ -67,3 +67,28 @@ parameterlist:
       formvalue: "0.0"
       tooltip: "min_peak_intensity"
 
+    - displayname: Networking Parameters
+      paramtype: section
+
+    - displayname: min_cosine
+      paramtype: text
+      nf_paramname: networking_min_cosine
+      formplaceholder: Enter the min_cosine
+      formvalue: "0.7"
+
+    - displayname: min_matched_peaks
+      paramtype: text
+      nf_paramname: networking_min_matched_peaks
+      formplaceholder: Enter the min_matched_peaks
+      formvalue: "6"
+
+    - displayname: networking_max_shift
+      paramtype: text
+      nf_paramname: networking_max_shift
+      formplaceholder: Enter the networking_max_shift
+      formvalue: "1999"
+
+    
+
+
+

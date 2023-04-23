@@ -43,3 +43,26 @@ Views:
             -   title: "# spectra"
                 data: "number of spectra"
     
+-   name: Pairs List
+    displayname: Pairs List
+    viewname: pairslist
+    displaytype: datatable
+    parameters:
+        filename: nf_output/networking/merged_pairs.tsv
+        columns:
+            -   title: "View"
+                data: 
+            -   title: "CLUSTERID1"
+                data: CLUSTERID1
+            -   title: "CLUSTERID2"
+                data: CLUSTERID2
+            -   title: "DeltaMZ"
+                data: DeltaMZ
+            -   title: "DeltaMZ"
+                data: DeltaMZ
+            -   title: "Cosine"
+                data: Cosine
+            -   title: "MatchedPeaks"
+                data: MatchedPeaks
+
+            
