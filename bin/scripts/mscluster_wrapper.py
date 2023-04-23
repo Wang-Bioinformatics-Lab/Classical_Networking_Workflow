@@ -5,6 +5,7 @@ import os
 import glob
 import argparse
 import ming_spectrum_library
+import pandas as pd
 
 def write_params(input_spectra_folder, tool_path, output_params_filename,
                  min_cluster_size=2,
@@ -94,6 +95,11 @@ def main():
     clustersummary_file = os.path.join(args.final_output_folder, "clustersummary.tsv")
     cmd = "{} --outfile {} --out-summary-file {}".format(path_to_clusterinfo, clusterinfo_file, clustersummary_file)
     os.system(cmd)
+
+    # TODO: rewrite output to only include the cluster summary that have size greater than the parameter
+    cluster_summary_df = pd.read_csv(clustersummary_file, sep="\t")
+    cluster_summary_df = cluster_summary_df[cluster_summary_df["number of spectra"] >= int(args.min_cluster_size)]
+    cluster_summary_df.to_csv(clustersummary_file, sep="\t", index=False)
 
     # Do clean up out output spectra folder
     all_pklbin_files = glob.glob(os.path.join(args.output_spectra_folder, "specs_ms_*.pklbin"))

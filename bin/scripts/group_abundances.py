@@ -7,157 +7,204 @@ import os
 import argparse
 import statistics
 import pandas as pd
+from tqdm import tqdm
 
 from collections import defaultdict
 
-def load_group_mapping(filename):
-    default_groups = ['G1','G2','G3','G4','G5','G6']
-    group_to_files = defaultdict(list)
-    files_to_groups = defaultdict(list)
+# def load_group_mapping(filename):
+#     default_groups = ['G1','G2','G3','G4','G5','G6']
+#     group_to_files = defaultdict(list)
+#     files_to_groups = defaultdict(list)
 
-    for line in open(filename):
-        splits = line.split("=")
-        if len(splits) != 2:
-            continue
-        group_name = splits[0].replace("GROUP_", "")
-        files_path = splits[1].rstrip().split(";")
+#     for line in open(filename):
+#         splits = line.split("=")
+#         if len(splits) != 2:
+#             continue
+#         group_name = splits[0].replace("GROUP_", "")
+#         files_path = splits[1].rstrip().split(";")
 
-        if group_name in default_groups:
-            group_name = group_name
-        else:
-            group_name = "GNPSGROUP:" + group_name
+#         if group_name in default_groups:
+#             group_name = group_name
+#         else:
+#             group_name = "GNPSGROUP:" + group_name
 
-        for filename in files_path:
-            file_basename = os.path.basename(filename)
-            group_to_files[group_name].append(file_basename)
-            files_to_groups[file_basename].append(group_name)
+#         for filename in files_path:
+#             file_basename = os.path.basename(filename)
+#             group_to_files[group_name].append(file_basename)
+#             files_to_groups[file_basename].append(group_name)
 
-    return group_to_files, files_to_groups
+#     return group_to_files, files_to_groups
 
-def load_attribute_mapping(filename):
-    attribute_to_groups = {}
-    for line in open(filename):
-        attribute_name = "ATTRIBUTE_" + line.split("=")[0]
-        group_list = line.split("=")[1].rstrip().split(";")
-        group_list = [("GNPSGROUP:" + group_name) for group_name in group_list]
+# def load_attribute_mapping(filename):
+#     attribute_to_groups = {}
+#     for line in open(filename):
+#         attribute_name = "ATTRIBUTE_" + line.split("=")[0]
+#         group_list = line.split("=")[1].rstrip().split(";")
+#         group_list = [("GNPSGROUP:" + group_name) for group_name in group_list]
 
-        attribute_to_groups[attribute_name] = group_list
+#         attribute_to_groups[attribute_name] = group_list
 
-    return attribute_to_groups
+#     return attribute_to_groups
 
-#Adding more columns
-def calculate_default_attributes(all_clusters_list, group_names):
-    default_groups = ['G1','G2','G3','G4','G5','G6']
-    for cluster in all_clusters_list:
-        default_groups_in_cluster = []
-        for default_group in default_groups:
-            if cluster[default_group] > 0:
-                default_groups_in_cluster.append(default_group)
+# #Adding more columns
+# def calculate_default_attributes(all_clusters_list, group_names):
+#     default_groups = ['G1','G2','G3','G4','G5','G6']
+#     for cluster in all_clusters_list:
+#         default_groups_in_cluster = []
+#         for default_group in default_groups:
+#             if cluster[default_group] > 0:
+#                 default_groups_in_cluster.append(default_group)
 
-        cluster["DefaultGroups"] = ",".join(default_groups_in_cluster)
+#         cluster["DefaultGroups"] = ",".join(default_groups_in_cluster)
 
-        other_groups_in_cluster = []
-        for group_name in group_names:
-            if group_name in default_groups:
-                continue
+#         other_groups_in_cluster = []
+#         for group_name in group_names:
+#             if group_name in default_groups:
+#                 continue
 
-            if cluster[group_name] > 0:
-                other_groups_in_cluster.append(group_name)
+#             if cluster[group_name] > 0:
+#                 other_groups_in_cluster.append(group_name)
 
-        cluster["AllGroups"] = ",".join(other_groups_in_cluster).replace("GNPSGROUP:", "")
+#         cluster["AllGroups"] = ",".join(other_groups_in_cluster).replace("GNPSGROUP:", "")
 
-def calculate_cluster_file_stats(all_clusters_list, clusters_to_files, mangled_mapping):
-    for cluster in all_clusters_list:
-        all_files_per_cluster = [os.path.basename(mangled_mapping[mangled_name]) for mangled_name in clusters_to_files[cluster["cluster index"]]]
-        cluster["UniqueFileSourcesCount"] = len(all_files_per_cluster)
-        cluster["UniqueFileSources"] = "|".join(all_files_per_cluster)
+# def calculate_cluster_file_stats(all_clusters_list, clusters_to_files, mangled_mapping):
+#     for cluster in all_clusters_list:
+#         all_files_per_cluster = [os.path.basename(mangled_mapping[mangled_name]) for mangled_name in clusters_to_files[cluster["cluster index"]]]
+#         cluster["UniqueFileSourcesCount"] = len(all_files_per_cluster)
+#         cluster["UniqueFileSources"] = "|".join(all_files_per_cluster)
 
-def calculate_rt_stats(cluster_summary_list, cluster_to_RT):
-    for cluster in cluster_summary_list:
-        try:
-            cluster["RTMean"] = statistics.mean(cluster_to_RT[cluster["cluster index"]])
-            cluster["RTStdErr"] = statistics.pstdev(cluster_to_RT[cluster["cluster index"]])
-            cluster["RTMean_min"] = cluster["RTMean"] / 60
-        except:
-            cluster["RTMean"] = 0
-            cluster["RTStdErr"] = 0
-            cluster["RTMean_min"] = 0
+# def calculate_rt_stats(cluster_summary_list, cluster_to_RT):
+#     for cluster in cluster_summary_list:
+#         try:
+#             cluster["RTMean"] = statistics.mean(cluster_to_RT[cluster["cluster index"]])
+#             cluster["RTStdErr"] = statistics.pstdev(cluster_to_RT[cluster["cluster index"]])
+#             cluster["RTMean_min"] = cluster["RTMean"] / 60
+#         except:
+#             cluster["RTMean"] = 0
+#             cluster["RTStdErr"] = 0
+#             cluster["RTMean_min"] = 0
 
-def calculate_ancillary_information(all_clusters_list, task):
-    for cluster in all_clusters_list:
-        cluster_membership_url = "https://gnps.ucsd.edu//ProteoSAFe/result.jsp?task=%s&view=cluster_details&protein=%s&show=true" % (task, cluster["cluster index"])
-        cluster["GNPSLinkout_Cluster"] = cluster_membership_url
-        cluster["GNPSLinkout_Network"] = "https://gnps.ucsd.edu/ProteoSAFe/result.jsp?view=network_displayer&componentindex=%s&task=%s&show=true" % (cluster["componentindex"], task)
+# def calculate_ancillary_information(all_clusters_list, task):
+#     for cluster in all_clusters_list:
+#         cluster_membership_url = "https://gnps.ucsd.edu//ProteoSAFe/result.jsp?task=%s&view=cluster_details&protein=%s&show=true" % (task, cluster["cluster index"])
+#         cluster["GNPSLinkout_Cluster"] = cluster_membership_url
+#         cluster["GNPSLinkout_Network"] = "https://gnps.ucsd.edu/ProteoSAFe/result.jsp?view=network_displayer&componentindex=%s&task=%s&show=true" % (cluster["componentindex"], task)
         
-        charge = int(cluster["precursor charge"])
-        precursor = float(cluster["parent mass"])
-        if charge == 0:
-            charge = 1
-        even_odd_number = precursor - charge
-        even_odd_number = even_odd_number * 0.9995
-        even_odd_value = int(even_odd_number) % 2
+#         charge = int(cluster["precursor charge"])
+#         precursor = float(cluster["parent mass"])
+#         if charge == 0:
+#             charge = 1
+#         even_odd_number = precursor - charge
+#         even_odd_number = even_odd_number * 0.9995
+#         even_odd_value = int(even_odd_number) % 2
 
-        cluster["EvenOdd"] = even_odd_value
+#         cluster["EvenOdd"] = even_odd_value
 
-def filter_clusters_based_on_cluster_size(all_clusters_list, minimum_cluster_size):
-    new_cluster_list = []
-    for cluster in all_clusters_list:
-        if int(cluster["number of spectra"]) < minimum_cluster_size:
-            continue
-        new_cluster_list.append(cluster)
+# def filter_clusters_based_on_cluster_size(all_clusters_list, minimum_cluster_size):
+#     new_cluster_list = []
+#     for cluster in all_clusters_list:
+#         if int(cluster["number of spectra"]) < minimum_cluster_size:
+#             continue
+#         new_cluster_list.append(cluster)
 
-    return new_cluster_list
-
-
-def populate_network_component(all_clusters_list, pairs_filename):
-    cluster_to_component = defaultdict(lambda: -1)
-    for line in open(pairs_filename):
-        splits = line.rstrip().split("\t")
-        node1 = splits[0]
-        node2 = splits[1]
-        component = splits[-1]
-        cluster_to_component[node1] = component
-        cluster_to_component[node2] = component
-
-    for cluster in all_clusters_list:
-        cluster_index = cluster["cluster index"]
-        cluster["componentindex"] = cluster_to_component[cluster_index]
-
-def populate_network_identifications(cluster_summary_list, library_search_filename):
-    clusters_to_identifications = {}
-    library_ids_list = ming_fileio_library.parse_table_with_headers_object_list(library_search_filename)
-    for library_id in library_ids_list:
-        cluster_index = library_id["#Scan#"]
-        clusters_to_identifications[cluster_index] = library_id
-
-    fields_to_copy = ["Smiles", "MQScore", "MassDiff", "MZErrorPPM", "SpectrumID", "Smiles"]
-    for cluster in cluster_summary_list:
-        cluster_index = cluster["cluster index"]
-        if cluster_index in clusters_to_identifications:
-            cluster["LibraryID"] = clusters_to_identifications[cluster_index]["Compound_Name"]
-            for field in fields_to_copy:
-                cluster[field] = clusters_to_identifications[cluster_index][field]
-        else:
-            cluster["LibraryID"] = "N/A"
-            for field in fields_to_copy:
-                cluster[field] = "N/A"
+#     return new_cluster_list
 
 
+# def populate_network_component(all_clusters_list, pairs_filename):
+#     cluster_to_component = defaultdict(lambda: -1)
+#     for line in open(pairs_filename):
+#         splits = line.rstrip().split("\t")
+#         node1 = splits[0]
+#         node2 = splits[1]
+#         component = splits[-1]
+#         cluster_to_component[node1] = component
+#         cluster_to_component[node2] = component
+
+#     for cluster in all_clusters_list:
+#         cluster_index = cluster["cluster index"]
+#         cluster["componentindex"] = cluster_to_component[cluster_index]
+
+# def populate_network_identifications(cluster_summary_list, library_search_filename):
+#     clusters_to_identifications = {}
+#     library_ids_list = ming_fileio_library.parse_table_with_headers_object_list(library_search_filename)
+#     for library_id in library_ids_list:
+#         cluster_index = library_id["#Scan#"]
+#         clusters_to_identifications[cluster_index] = library_id
+
+#     fields_to_copy = ["Smiles", "MQScore", "MassDiff", "MZErrorPPM", "SpectrumID", "Smiles"]
+#     for cluster in cluster_summary_list:
+#         cluster_index = cluster["cluster index"]
+#         if cluster_index in clusters_to_identifications:
+#             cluster["LibraryID"] = clusters_to_identifications[cluster_index]["Compound_Name"]
+#             for field in fields_to_copy:
+#                 cluster[field] = clusters_to_identifications[cluster_index][field]
+#         else:
+#             cluster["LibraryID"] = "N/A"
+#             for field in fields_to_copy:
+#                 cluster[field] = "N/A"
+
+def create_attribute_group_list(metadata_df):
+    # Determining all the groups we want to calculate over columsn with prefix ATTRIBUTE_
+    all_attributes = [x for x in metadata_df.columns if x.startswith("ATTRIBUTE_")]
+
+    all_attribute_groups = []
+
+    for attribute in all_attributes:
+        # Getting the groups in each attribute and creating a list of them
+        attribute_groups = metadata_df[attribute].unique().tolist()
+
+        # Creating a dictionary for each attribute group
+        for attribute_group in attribute_groups:
+            attribute_group_dict = {}
+            attribute_group_dict["attribute"] = attribute
+            attribute_group_dict["group"] = attribute_group
+            all_attribute_groups.append(attribute_group_dict)
+
+    return all_attributes, all_attribute_groups
+
+
+# This function calculates all the group counds for all the relevant columns
 def calculate_groups_metadata(clustersummary_df, clusterinfo_df, metadata_df):
+    # Cleaning the filenames
+    clusterinfo_df["#Filename"] = clusterinfo_df["#Filename"].apply(lambda x: os.path.basename(x))
+    metadata_df["filename"] = metadata_df["filename"].apply(lambda x: os.path.basename(x))
+
+    # Folding in the metadata into clusterinfo
+    clusterinfo_df = clusterinfo_df.merge(metadata_df, left_on="#Filename", right_on="filename", how="left")
+
     # First lets group the cluster info by cluster index
-    grouped_clusterinfo_df = clusterinfo_df.groupby("cluster index")
+    grouped_clusterinfo_df = clusterinfo_df.groupby("#ClusterIdx")
 
     # loop through all the clusters
     cluster_summary_list = clustersummary_df.to_dict(orient="records")
 
-    for cluster in cluster_summary_list:
+    # Getting the attributes
+    all_attributes, all_attribute_groups = create_attribute_group_list(metadata_df)
+
+    for cluster in tqdm(cluster_summary_list):
         # filter for the grouped list
         cluster_index = cluster["cluster index"]
         clusterinfo_per_group_df = grouped_clusterinfo_df.get_group(cluster_index)
 
-        print(clusterinfo_per_group_df)
+        # TODO: We can likely speed this up with pandas operations
 
-        break
+        # Attribute_group
+        for attribute_group in all_attribute_groups:
+            #print(attribute_group)
+
+            # filtering the data
+            group_count = len(clusterinfo_per_group_df[clusterinfo_per_group_df[attribute_group["attribute"]] == attribute_group["group"]])
+            group_column = "{}:GNPSGROUP:{}".format(attribute_group["attribute"], attribute_group["group"])
+
+            cluster[group_column] = group_count
+    
+        # Adding the cluster information for which group membership it is a part of
+        for attribute in all_attributes:
+            # Finding all groups in the attribute
+            all_groups = set(clusterinfo_per_group_df[attribute])
+            cluster[attribute] = ",".join(all_groups)
+
+    return pd.DataFrame(cluster_summary_list)
 
 
 
@@ -170,16 +217,18 @@ def main():
     parser.add_argument('output_clusterinfosummary_filename', help='output_clusterinfosummary_filename')
     args = parser.parse_args()
 
-
     # Loading Data
-    clustersummary_df = pd.read_csv(args.input_clusterinfosummary_file, sep="\t").to_dict(orient="records")
+    clustersummary_df = pd.read_csv(args.input_clusterinfosummary_file, sep="\t")
     clustersinfo_df = pd.read_csv(args.input_clusterinfo_file, sep="\t")
     metadata_df = pd.read_csv(args.input_metadata, sep="\t")
 
     # Enriching metadata group counts
     clustersummary_df = calculate_groups_metadata(clustersummary_df, clustersinfo_df, metadata_df)
 
-    exit(1)
+    # Writing out the file
+    clustersummary_df.to_csv(args.output_clusterinfosummary_filename, sep="\t", index=False)
+
+    exit(0)
 
 
     """Loading group filenames"""

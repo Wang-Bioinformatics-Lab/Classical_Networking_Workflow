@@ -191,14 +191,35 @@ process createMetadataFile {
     file "merged_metadata.tsv"
 
     //script in case its NO_FILE
-    def metadataflag = input_metadata.name != 'NO_FILE' ? "--input_metadata $input_metadata" : ''
     """
     python $TOOL_FOLDER/scripts/merge_metadata.py \
-    metadata.tsv \
+    $input_metadata \
     merged_metadata.tsv
     """
 }
 
+// Calculating the groupings
+process calculateGroupings {
+    publishDir "./nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file input_metadata
+    file input_clustersummary
+    file input_clusterinfo
+
+    output:
+    file "clustersummary_with_groups.tsv"
+
+    """
+    python $TOOL_FOLDER/scripts/group_abundances.py \
+    $input_clusterinfo \
+    $input_clustersummary \
+    $input_metadata \
+    clustersummary_with_groups.tsv
+    """
+}
 
 
 workflow {
@@ -232,4 +253,10 @@ workflow {
     else{
         input_metadata_ch = Channel.of(file("NO_FILE"))
     }
+
+    merged_metadata_ch = createMetadataFile(input_metadata_ch)
+
+    // Enriching the network
+    clustersummary_with_groups_ch = calculateGroupings(merged_metadata_ch, clustersummary_ch, clusterinfo_ch)
+
 }
