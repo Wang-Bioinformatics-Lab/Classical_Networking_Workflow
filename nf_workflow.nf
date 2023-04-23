@@ -185,13 +185,13 @@ process createMetadataFile {
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
-    file "metadata.tsv"
+    file input_metadata
 
     output:
     file "merged_metadata.tsv"
 
     //script in case its NO_FILE
-    
+    def metadataflag = input_metadata.name != 'NO_FILE' ? "--input_metadata $input_metadata" : ''
     """
     python $TOOL_FOLDER/scripts/merge_metadata.py \
     metadata.tsv \
@@ -220,4 +220,16 @@ workflow {
 
     networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
 
+    // Handling Metadata, if we don't have one, we'll set it to be empty
+    if(params.metadata_filename.length() > 0){
+        if(params.metadata_filename == "NO_FILE"){
+            input_metadata_ch = Channel.of(file("NO_FILE"))
+        }
+        else{
+            input_metadata_ch = Channel.fromPath(params.metadata_filename).first()
+        }
+    }
+    else{
+        input_metadata_ch = Channel.of(file("NO_FILE"))
+    }
 }

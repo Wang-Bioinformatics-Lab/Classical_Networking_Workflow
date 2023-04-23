@@ -29,6 +29,16 @@ parameterlist:
       optional: false
       selectsinglefile: false
       folderunroll: true
+    
+    - displayname: Input Metadata File
+      paramtype: fileselector
+      nf_paramname: metadata_filename
+      formplaceholder: Enter the path to metadata_filename
+      formvalue: ""
+      targettaskfolder: metadata_filename
+      optional: true
+      selectsinglefile: true
+      folderunroll: true
 
     - displayname: General Parameters
       paramtype: section
