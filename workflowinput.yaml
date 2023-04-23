@@ -76,6 +76,26 @@ parameterlist:
       formplaceholder: Enter the min_peak_intensity
       formvalue: "0.0"
       tooltip: "min_peak_intensity"
+    
+    - displayname: Window Filter
+      paramtype: select
+      nf_paramname: window_filter
+      formvalue: "yes"
+      options:
+        - value: "yes"
+          display: "yes"
+        - value: "no"
+          display: "no"
+
+    - displayname: Precursor Window Filter
+      paramtype: select
+      nf_paramname: precursor_filter
+      formvalue: "yes"
+      options:
+        - value: "yes"
+          display: "yes"
+        - value: "no"
+          display: "no"
 
     - displayname: Networking Parameters
       paramtype: section
