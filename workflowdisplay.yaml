@@ -48,7 +48,7 @@ Views:
     viewname: pairslist
     displaytype: datatable
     parameters:
-        filename: nf_output/networking/merged_pairs.tsv
+        filename: nf_output/networking/filtered_pairs.tsv
         columns:
             -   title: "View"
                 data: 

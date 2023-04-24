@@ -180,7 +180,7 @@ process calculatePairs {
 // Creating the metadata file
 // TODO: Finish this
 process createMetadataFile {
-    publishDir "./nf_output", mode: 'copy'
+    publishDir "./nf_output/metadata", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -200,7 +200,7 @@ process createMetadataFile {
 
 // Calculating the groupings
 process calculateGroupings {
-    publishDir "./nf_output", mode: 'copy'
+    publishDir "./nf_output/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -223,7 +223,7 @@ process calculateGroupings {
 
 // Filtering the network
 process filterNetwork {
-    publishDir "./nf_output", mode: 'copy'
+    publishDir "./nf_output/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -241,6 +241,29 @@ process filterNetwork {
     """
 }
 
+// Enriching the Cluster Summary
+process enrichClusterSummary {
+    publishDir "./nf_output/networking", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file input_clustersummary
+    file input_filtered_pairs
+    file input_library_matches
+
+    output:
+    file "clustersummary_with_network.tsv"
+
+    """
+    python $TOOL_FOLDER/scripts/enrich_cluster_summary.py \
+    $input_clustersummary \
+    $input_filtered_pairs \
+    $input_library_matches \
+    clustersummary_with_network.tsv
+    """
+}
+
 
 workflow {
     input_spectra_ch = Channel.fromPath(params.input_spectra)
@@ -253,7 +276,7 @@ workflow {
     libraries_ch = Channel.fromPath(params.input_libraries + "/*.mgf" )
     search_results_ch = librarySearchData(libraries_ch, clustered_spectra_ch)
     merged_results_ch = librarymergeResults(search_results_ch.collect())
-    librarygetGNPSAnnotations(merged_results_ch)
+    gnps_library_results_ch = librarygetGNPSAnnotations(merged_results_ch)
 
     // Networking
     params_ch = networkingGNPSPrepParams(clustered_spectra_ch)
@@ -262,7 +285,7 @@ workflow {
     merged_networking_pairs_ch = networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
 
     // Filtering the network
-    filterNetwork(merged_networking_pairs_ch)
+    filtered_networking_pairs_ch = filterNetwork(merged_networking_pairs_ch)
 
 
     // Handling Metadata, if we don't have one, we'll set it to be empty
@@ -280,8 +303,11 @@ workflow {
 
     merged_metadata_ch = createMetadataFile(input_metadata_ch)
 
-    // Enriching the network
+    // Enriching the network with group mappings
     clustersummary_with_groups_ch = calculateGroupings(merged_metadata_ch, clustersummary_ch, clusterinfo_ch)
+
+    // Adding component and library informaiton
+    // clustersummary_with_network_ch = enrichClusterSummary(clustersummary_with_groups_ch, filtered_networking_pairs_ch, gnps_library_results_ch)
 
     
 
