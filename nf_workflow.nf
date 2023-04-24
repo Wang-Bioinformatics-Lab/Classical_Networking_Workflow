@@ -221,6 +221,26 @@ process calculateGroupings {
     """
 }
 
+// Filtering the network
+process filterNetwork {
+    publishDir "./nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file input_pairs
+
+    output:
+    file "filtered_pairs.tsv"
+
+    """
+    python $TOOL_FOLDER/scripts/filter_networking_edges.py \
+    $input_pairs \
+    filtered_pairs.tsv \
+    filtered_pairs_old_format.tsv
+    """
+}
+
 
 workflow {
     input_spectra_ch = Channel.fromPath(params.input_spectra)
@@ -239,7 +259,11 @@ workflow {
     params_ch = networkingGNPSPrepParams(clustered_spectra_ch)
     networking_results_temp_ch = calculatePairs(clustered_spectra_ch, params_ch.collect())
 
-    networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
+    merged_networking_pairs_ch = networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
+
+    // Filtering the network
+    filterNetwork(merged_networking_pairs_ch)
+
 
     // Handling Metadata, if we don't have one, we'll set it to be empty
     if(params.metadata_filename.length() > 0){
@@ -258,5 +282,7 @@ workflow {
 
     // Enriching the network
     clustersummary_with_groups_ch = calculateGroupings(merged_metadata_ch, clustersummary_ch, clusterinfo_ch)
+
+    
 
 }

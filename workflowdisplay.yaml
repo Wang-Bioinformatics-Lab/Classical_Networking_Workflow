@@ -36,12 +36,12 @@ Views:
     parameters:
         filename: nf_output/library/merged_results_with_gnps.tsv
         columns:
-            -   title: "Cluster"
-                data: "cluster index"
-            -   title: "Parent mass"
-                data: "parent mass"
-            -   title: "# spectra"
-                data: "number of spectra"
+            -   title: "#Scan#"
+                data: "#Scan#"
+            -   title: "Compound_Name"
+                data: "Compound_Name"
+            -   title: "MQScore"
+                data: "MQScore"
     
 -   name: Pairs List
     displayname: Pairs List
