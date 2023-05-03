@@ -41,7 +41,13 @@ def main():
         node_to_component[node2] = component
 
     # Adding component to cluster_summary
-    df_cluster_summary['component'] = df_cluster_summary['node'].map(node_to_component)
+    df_cluster_summary['component'] = df_cluster_summary['cluster index'].map(node_to_component)
+
+    # Adding library matches, merging
+    df_cluster_summary['library matches'] = df_cluster_summary['cluster index'].map(df_library_matches.set_index('#Scan#')['Compound_Name'])
+
+    # Exporting summary with components
+    df_cluster_summary.to_csv(args.clustersummary_with_network, sep='\t', index=False)
 
 if __name__ == "__main__":
     main()
