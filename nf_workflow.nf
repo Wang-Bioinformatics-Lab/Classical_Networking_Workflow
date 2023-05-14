@@ -58,16 +58,16 @@ process mscluster {
     file inputSpectra
 
     output:
-    file 'output/specs_ms.mgf'
-    file 'output/clusterinfo.tsv'
-    file 'output/clustersummary.tsv'
+    file 'clustering/specs_ms.mgf'
+    file 'clustering/clusterinfo.tsv'
+    file 'clustering/clustersummary.tsv'
 
     """
-    mkdir output
+    mkdir clustering
     python $TOOL_FOLDER/scripts/mscluster_wrapper.py \
     $inputSpectra $TOOL_FOLDER/binaries \
     spectra \
-    output \
+    clustering \
     --min_cluster_size $params.min_cluster_size \
     --pm_tolerance $params.pm_tolerance \
     --fragment_tolerance $params.fragment_tolerance \
