@@ -19,7 +19,7 @@ Views:
     viewname: clustersummary
     displaytype: datatable
     parameters:
-        filename: nf_output/output/clustersummary.tsv
+        filename: nf_output/networking/clustersummary_with_network.tsv
         columns:
             -   title: "Cluster"
                 data: "cluster index"

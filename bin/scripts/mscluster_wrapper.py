@@ -87,6 +87,11 @@ def main():
 
     # TODO: we need to make sure that there are empty spectra
     output_mgf_filename = os.path.join(args.final_output_folder, "specs_ms.mgf")
+
+    # Making sure the scans are continuous
+    spectrum_collection.make_scans_contiguous()
+    
+    # Saving out the MGF
     spectrum_collection.save_to_mgf(open(output_mgf_filename, "w"), renumber_scans=False)
 
     # Creating the clusterinfo file

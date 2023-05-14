@@ -42,6 +42,9 @@ def main():
 
     # Adding component to cluster_summary
     df_cluster_summary['component'] = df_cluster_summary['cluster index'].map(node_to_component)
+    df_cluster_summary['component'] = df_cluster_summary['component'].fillna(-1)
+    # Making sure column is an integer
+    df_cluster_summary['component'] = df_cluster_summary['component'].astype(int)
 
     # Adding library matches, merging
     df_cluster_summary['library matches'] = df_cluster_summary['cluster index'].map(df_library_matches.set_index('#Scan#')['Compound_Name'])

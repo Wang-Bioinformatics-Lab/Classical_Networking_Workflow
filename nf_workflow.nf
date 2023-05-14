@@ -269,6 +269,8 @@ process createNetworkGraphML {
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
+    cache false
+
     input:
     file input_clustersummary
     file input_filtered_pairs
