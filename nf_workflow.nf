@@ -264,6 +264,28 @@ process enrichClusterSummary {
     """
 }
 
+process createNetworkGraphML {
+    publishDir "./nf_output/networking", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file input_clustersummary
+    file input_filtered_pairs
+    file input_library_matches
+
+    output:
+    file "network.graphml"
+
+    """
+    python $TOOL_FOLDER/scripts/create_network_graphml.py \
+    $input_clustersummary \
+    $input_filtered_pairs \
+    $input_library_matches \
+    network.graphml
+    """
+}
+
 
 workflow {
     input_spectra_ch = Channel.fromPath(params.input_spectra)
@@ -309,6 +331,7 @@ workflow {
     // Adding component and library informaiton
     clustersummary_with_network_ch = enrichClusterSummary(clustersummary_with_groups_ch, filtered_networking_pairs_ch, gnps_library_results_ch)
 
-    
+    // Creating the graphml Network
+    createNetworkGraphML(clustersummary_with_network_ch, filtered_networking_pairs_ch, gnps_library_results_ch)
 
 }
