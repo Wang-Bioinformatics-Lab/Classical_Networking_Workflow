@@ -223,7 +223,7 @@ def main():
     metadata_df = pd.read_csv(args.input_metadata, sep="\t")
 
     # Enriching metadata group counts
-    clustersummary_df = calculate_groups_metadata(clustersummary_df, clustersinfo_df, metadata_df)
+    # clustersummary_df = calculate_groups_metadata(clustersummary_df, clustersinfo_df, metadata_df)
 
     # Writing out the file
     clustersummary_df.to_csv(args.output_clusterinfosummary_filename, sep="\t", index=False)
