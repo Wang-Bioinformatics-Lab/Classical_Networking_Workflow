@@ -273,16 +273,7 @@ if __name__ == '__main__':
 
     # Writing the results to a TSV file
     output_df = pd.DataFrame(results, columns=["CLUSTERID1", "CLUSTERID2", "Cosine"])
-
-    # Merge in the input pairs with additional columns from all_pairs
-    # output_df = pd.merge(output_df, all_pairs_df, on=["CLUSTERID1", "CLUSTERID2"], how="left")
-
     output_df.to_csv(result_file_path, sep='\t', index=False)
-    
-    # with open(result_file_path, 'w', newline='') as tsv_file:
-    #     writer = csv.writer(tsv_file, delimiter='\t')  # Use tab as the delimiter
-    #     # Write the result to the TSV file
-    #     writer.writerows(results)
     
     print(f"Data saved to {result_file_path} successfully.")
 
