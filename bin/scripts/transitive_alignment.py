@@ -241,6 +241,7 @@ def mgf_processing(mgf_filename):
 
 
 
+
 if __name__ == '__main__':
     #pass arguments
     parser = argparse.ArgumentParser(description='Using realignment method to reconstruct the network')
@@ -248,6 +249,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', type=str,required=True,default="merged_pairs.tsv", help='raw pairs filename')
     parser.add_argument('-p', type=int,required=False,default=4, help='the number of paralleled processes')
     parser.add_argument('-r', type=str, required=False, default="trans_align_result.tsv", help='output filename')
+    parser.add_argument('--minimum_score', type=float, required=False, default=0.7, help='Minimum score to keep in output edges')
 
     args = parser.parse_args()
     mgf_filename = args.c
@@ -273,6 +275,10 @@ if __name__ == '__main__':
 
     # Writing the results to a TSV file
     output_df = pd.DataFrame(results, columns=["CLUSTERID1", "CLUSTERID2", "Cosine"])
+
+    # Filtering the results by minimum score
+    output_df = output_df[output_df["Cosine"] >= args.minimum_score]
+
     output_df.to_csv(result_file_path, sep='\t', index=False)
     
     print(f"Data saved to {result_file_path} successfully.")

@@ -253,6 +253,8 @@ process filterNetworkTransitive {
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
+    cache false
+
     input:
     file input_pairs
     file input_spectra
@@ -265,7 +267,8 @@ process filterNetworkTransitive {
     -c $input_spectra \
     -m $input_pairs \
     -p 30 \
-    -r filtered_pairs.tsv
+    -r filtered_pairs.tsv \
+    --minimum_score $params.networking_min_cosine
     """
 }
 
@@ -274,8 +277,6 @@ process enrichNetworkEdges {
     publishDir "./nf_output/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
-
-    cache false
 
     input:
     file input_pairs
