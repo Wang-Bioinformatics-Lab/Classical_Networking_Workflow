@@ -48,7 +48,7 @@ Views:
     viewname: pairslist
     displaytype: datatable
     parameters:
-        filename: nf_output/networking/filtered_pairs.tsv
+        filename: nf_output/networking/pairs_with_components.tsv
         columns:
             -   title: "View"
                 data: 
@@ -58,12 +58,13 @@ Views:
                 data: CLUSTERID2
             -   title: "DeltaMZ"
                 data: DeltaMZ
-            -   title: "DeltaMZ"
-                data: DeltaMZ
             -   title: "Cosine"
                 data: Cosine
             -   title: "MatchedPeaks"
                 data: MatchedPeaks
+            -   title: "ComponentIndex"
+                data: ComponentIndex
+                
 -   name: section
     displayname: Network Visualizations
     viewname: section

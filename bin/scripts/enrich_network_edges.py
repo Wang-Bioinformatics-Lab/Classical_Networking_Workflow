@@ -9,6 +9,7 @@ import argparse
 import molecular_network_filtering_library
 from collections import defaultdict
 import pandas as pd
+import networkx as nx
 
 def main():
     parser = argparse.ArgumentParser(description='Add Component Number to network')
@@ -52,9 +53,12 @@ def main():
 
     # Loading and calculating
     G = molecular_network_filtering_library.loading_network(args.output_network_edges, hasHeaders=True)
-    
+
     if G == None:
         exit(0)
+
+    # Purely debugging
+    # G = nx.minimum_spanning_tree(G, weight="cosine_score")
 
     molecular_network_filtering_library.output_graph_with_headers(G, args.output_network_edges)
 

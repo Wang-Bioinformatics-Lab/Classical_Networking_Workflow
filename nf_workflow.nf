@@ -275,6 +275,8 @@ process enrichNetworkEdges {
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
+    cache false
+
     input:
     file input_pairs
     file input_clustersummary
