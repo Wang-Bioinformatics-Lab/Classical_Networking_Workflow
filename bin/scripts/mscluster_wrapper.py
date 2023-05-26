@@ -20,6 +20,9 @@ def write_params(input_spectra_folder, tool_path, output_params_filename,
 
     all_spectrum_files = all_mgf_files + all_mzxml_files + all_mzml_files
 
+    # Sort these filenames
+    all_spectrum_files.sort()
+
     with open(output_params_filename, "w") as params_file:
         params_file.write("CLUSTER_MODEL=LTQ_TRYP\n")
         params_file.write("CLUST_RANK_FILTER=6\n")
