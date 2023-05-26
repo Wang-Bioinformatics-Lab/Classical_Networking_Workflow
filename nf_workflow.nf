@@ -8,7 +8,7 @@ params.input_spectra = "data/input_spectra"
 params.input_libraries = "data/library"
 
 // Metadata
-params.input_metadata = "data/metadata.tsv"
+params.metadata_filename = "data/metadata.tsv"
 
 // Parameters
 params.min_cluster_size = "2"
@@ -21,11 +21,16 @@ params.min_peak_intensity = "0.0"
 
 // Molecular Networking Options
 params.similarity = "gnps"
+params.topology = "classic" // or can be transitive
 
 params.parallelism = 24
 params.networking_min_matched_peaks = 6
 params.networking_min_cosine = 0.7
 params.networking_max_shift = 1000
+
+// Topology Filtering
+params.topology_topk = 10
+params.topology_maxcomponent = 100
 
 // Workflow Boiler Plate
 params.OMETALINKING_YAML = "flow_filelinking.yaml"
@@ -221,7 +226,7 @@ process calculateGroupings {
     """
 }
 
-// Filtering the network
+// Filtering the network, this is the classic way
 process filterNetwork {
     publishDir "./nf_output/networking", mode: 'copy'
 
@@ -237,7 +242,28 @@ process filterNetwork {
     python $TOOL_FOLDER/scripts/filter_networking_edges.py \
     $input_pairs \
     filtered_pairs.tsv \
-    filtered_pairs_old_format.tsv
+    filtered_pairs_old_format.tsv \
+    --top_k_val $params.topology_topk \
+    --max_component_size $params.topology_maxcomponent
+    """
+}
+
+process filterNetworkTransitive {
+    publishDir "./nf_output/networking", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file input_pairs
+    file input_spectra
+
+    output:
+    file "filtered_pairs.tsv"
+
+    """
+    python $TOOL_FOLDER/scripts/transitive_alignment.py \
+    $input_pairs \
+    filtered_pairs.tsv
     """
 }
 
