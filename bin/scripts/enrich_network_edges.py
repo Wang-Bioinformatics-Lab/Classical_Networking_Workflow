@@ -31,7 +31,6 @@ def main():
         pairs_list = pairs_df.to_dict(orient="records")
 
         for pair in pairs_list:
-            print(pair)
             cluster1 = pair["CLUSTERID1"]
             cluster2 = pair["CLUSTERID2"]
 
@@ -42,12 +41,18 @@ def main():
 
             pair["DeltaMZ"] = deltamz
 
+        pairs_df = pd.DataFrame(pairs_list)
+
     if "ComponentIndex" in pairs_df.columns:
         pairs_df.to_csv(args.output_network_edges, sep="\t", index=False)
         exit(0)
 
+    # Saving a copy in the output
+    pairs_df.to_csv(args.output_network_edges, sep="\t", index=False)
+
     # Loading and calculating
-    G = molecular_network_filtering_library.loading_network(args.networking_pairs_results_file, hasHeaders=True)
+    G = molecular_network_filtering_library.loading_network(args.output_network_edges, hasHeaders=True)
+    
     if G == None:
         exit(0)
 
