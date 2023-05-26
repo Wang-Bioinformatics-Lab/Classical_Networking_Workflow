@@ -248,25 +248,41 @@ if __name__ == '__main__':
     parser.add_argument('-m', type=str,required=True,default="merged_pairs.tsv", help='raw pairs filename')
     parser.add_argument('-p', type=int,required=False,default=4, help='the number of paralleled processes')
     parser.add_argument('-r', type=str, required=False, default="trans_align_result.tsv", help='output filename')
+
     args = parser.parse_args()
     mgf_filename = args.c
     raw_pairs_filename  = args.m
     processes_number = args.p
     result_file_path = args.r
+    
     #read the raw pairs file
     all_pairs_df = pd.read_csv(raw_pairs_filename, sep='\t')
     #constructed network from edge list
     G_all_pairs = nx.from_pandas_edgelist(all_pairs_df, "CLUSTERID1", "CLUSTERID2", "Cosine")
+    
     #creat the spectrum dictionary
     spec_dic = mgf_processing(mgf_filename)
     print("start to align nodes")
+    
     with Pool(processes=args.p, maxtasksperchild=1000) as pool:
         values = [[node1, node2] for [node1, node2] in nx.non_edges(G_all_pairs)]
         results = list(tqdm(pool.imap(re_alignment_parallel, values), total=len(values)))
+
+    # Fitlering no results
     results = [value for value in results if value is not None]
-    with open(result_file_path, 'w', newline='') as tsv_file:
-        writer = csv.writer(tsv_file, delimiter='\t')  # Use tab as the delimiter
-        # Write the result to the TSV file
-        writer.writerows(results)
+
+    # Writing the results to a TSV file
+    output_df = pd.DataFrame(results, columns=["CLUSTERID1", "CLUSTERID2", "Cosine"])
+
+    # Merge in the input pairs with additional columns from all_pairs
+    # output_df = pd.merge(output_df, all_pairs_df, on=["CLUSTERID1", "CLUSTERID2"], how="left")
+
+    output_df.to_csv(result_file_path, sep='\t', index=False)
+    
+    # with open(result_file_path, 'w', newline='') as tsv_file:
+    #     writer = csv.writer(tsv_file, delimiter='\t')  # Use tab as the delimiter
+    #     # Write the result to the TSV file
+    #     writer.writerows(results)
+    
     print(f"Data saved to {result_file_path} successfully.")
 

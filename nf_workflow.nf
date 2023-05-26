@@ -269,6 +269,25 @@ process filterNetworkTransitive {
     """
 }
 
+// This takes the pairs and adds the component numbers to the table
+process addComponentNumbers {
+    publishDir "./nf_output/networking", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file input_pairs
+
+    output:
+    file "pairs_with_components.tsv"
+
+    """
+    python $TOOL_FOLDER/scripts/add_network_components.py \
+    $input_pairs \
+    pairs_with_components.tsv
+    """
+}
+
 // Enriching the Cluster Summary
 process enrichClusterSummary {
     publishDir "./nf_output/networking", mode: 'copy'
@@ -344,6 +363,8 @@ workflow {
         filtered_networking_pairs_ch = filterNetworkTransitive(merged_networking_pairs_ch, clustered_spectra_ch)
     }
 
+    filtered_networking_pairs_withcomponent_ch = addComponentNumbers(filtered_networking_pairs_ch)
+
     // Handling Metadata, if we don't have one, we'll set it to be empty
     if(params.metadata_filename.length() > 0){
         if(params.metadata_filename == "NO_FILE"){
@@ -363,9 +384,9 @@ workflow {
     clustersummary_with_groups_ch = calculateGroupings(merged_metadata_ch, clustersummary_ch, clusterinfo_ch)
 
     // Adding component and library informaiton
-    clustersummary_with_network_ch = enrichClusterSummary(clustersummary_with_groups_ch, filtered_networking_pairs_ch, gnps_library_results_ch)
+    clustersummary_with_network_ch = enrichClusterSummary(clustersummary_with_groups_ch, filtered_networking_pairs_withcomponent_ch, gnps_library_results_ch)
 
     // Creating the graphml Network
-    createNetworkGraphML(clustersummary_with_network_ch, filtered_networking_pairs_ch, gnps_library_results_ch)
+    createNetworkGraphML(clustersummary_with_network_ch, filtered_networking_pairs_withcomponent_ch, gnps_library_results_ch)
 
 }
