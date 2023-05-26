@@ -262,8 +262,10 @@ process filterNetworkTransitive {
 
     """
     python $TOOL_FOLDER/scripts/transitive_alignment.py \
-    $input_pairs \
-    filtered_pairs.tsv
+    -c $input_spectra \
+    -m $input_pairs \
+    -p 30 \
+    -r filtered_pairs.tsv
     """
 }
 
@@ -335,8 +337,12 @@ workflow {
     merged_networking_pairs_ch = networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
 
     // Filtering the network
-    filtered_networking_pairs_ch = filterNetwork(merged_networking_pairs_ch)
-
+    if(params.topology == "classic"){
+        filtered_networking_pairs_ch = filterNetwork(merged_networking_pairs_ch)
+    }
+    else if (params.topology == "transitive"){
+        filtered_networking_pairs_ch = filterNetworkTransitive(merged_networking_pairs_ch, clustered_spectra_ch)
+    }
 
     // Handling Metadata, if we don't have one, we'll set it to be empty
     if(params.metadata_filename.length() > 0){
