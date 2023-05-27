@@ -46,6 +46,12 @@ def main():
     # Making sure column is an integer
     df_cluster_summary['component'] = df_cluster_summary['component'].astype(int)
 
+    # Sort library matches by score
+    df_library_matches = df_library_matches.sort_values(by=['Score'], ascending=False)
+
+    # Grouping by the scan
+    df_library_matches = df_library_matches.groupby('#Scan#').head(1)
+
     # Merging in library matches
     df_cluster_summary = pd.merge(df_cluster_summary, df_library_matches, how='left', left_on='cluster index', right_on='#Scan#')
 
