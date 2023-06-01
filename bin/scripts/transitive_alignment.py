@@ -239,8 +239,43 @@ def mgf_processing(mgf_filename):
                     intensity_array.append(intensity)
     return spec_dic
 
+def generate_candidates(G, C, S):
+    if (len(C)==1):
+        return [n for n in G.neighbors(C[0]) if n in S]
+    else:
+        res = set([n for n in G.neighbors(C[0])if n in S])
+        for item in C[1:]:
+            res=res & set([n for n in G.neighbors(item)])
+    return list(res)
 
-
+def CAST_cluster(G, theta):
+    sorted_node=list(sorted(G.degree, key=lambda x: x[1], reverse=True))
+    S = [n[0] for n in sorted_node]
+    P=[]
+    while (len(S)):
+        v=S[0]
+        C=[]
+        C.append(v)
+        candidates=generate_candidates(G,C,S)
+        while(len(candidates)):
+            can_dic={}
+            nonematch_flag=1
+            for candidate in candidates:
+                avg_weight=0
+                for node in C:
+                    avg_weight += G.edges[candidate,node]['Cosine']
+                avg_weight=avg_weight/len(C)
+                if avg_weight>theta:
+                    can_dic[candidate]=avg_weight
+                    nonematch_flag=0
+            if (nonematch_flag):
+                break
+            close_node =  max(can_dic,key=can_dic.get)
+            C.append(close_node)
+            candidates=generate_candidates(G,C,S)
+        P.append(C)
+        S=[x for x in S if x not in C]
+    return P
 
 if __name__ == '__main__':
     #pass arguments
@@ -249,6 +284,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', type=str,required=True,default="merged_pairs.tsv", help='raw pairs filename')
     parser.add_argument('-p', type=int,required=False,default=4, help='the number of paralleled processes')
     parser.add_argument('-r', type=str, required=False, default="trans_align_result.tsv", help='output filename')
+    parser.add_argument('-th', type=int, required=False, default=0.8, help='CAST threshold')
     parser.add_argument('--minimum_score', type=float, required=False, default=0.7, help='Minimum score to keep in output edges')
 
     args = parser.parse_args()
@@ -256,16 +292,15 @@ if __name__ == '__main__':
     raw_pairs_filename  = args.m
     processes_number = args.p
     result_file_path = args.r
-    
+
     #read the raw pairs file
     all_pairs_df = pd.read_csv(raw_pairs_filename, sep='\t')
     #constructed network from edge list
     G_all_pairs = nx.from_pandas_edgelist(all_pairs_df, "CLUSTERID1", "CLUSTERID2", "Cosine")
-    
+
     #creat the spectrum dictionary
     spec_dic = mgf_processing(mgf_filename)
     print("start to align nodes")
-    
     with Pool(processes=args.p, maxtasksperchild=1000) as pool:
         values = [[node1, node2] for [node1, node2] in nx.non_edges(G_all_pairs)]
         results = list(tqdm(pool.imap(re_alignment_parallel, values), total=len(values)))
@@ -273,13 +308,32 @@ if __name__ == '__main__':
     # Fitlering no results
     results = [value for value in results if value is not None]
 
-    # Writing the results to a TSV file
-    output_df = pd.DataFrame(results, columns=["CLUSTERID1", "CLUSTERID2", "Cosine"])
+    new_aligned_edge = []
+    for item in results:
+        if item[2]>=args.minimum_score:
+            new_aligned_edge.append(item)
 
-    # Filtering the results by minimum score
-    output_df = output_df[output_df["Cosine"] >= args.minimum_score]
+    # add new aligned edge to raw pairs
+    for edge in new_aligned_edge:
+        G_all_pairs.add_edge(edge[0], edge[1], Cosine=edge[2])
+
+    # creat CAST component
+    cast_cluster = CAST_cluster(G_all_pairs, args.th)
+
+    cast_components = [G_all_pairs.subgraph(c).copy() for c in cast_cluster]
+
+    output_results=[]
+
+    # get the all the edges
+    for component in cast_components:
+        if component.edges():
+            for edge in component.edges():
+                output_results.append((edge[0],edge[1],G_all_pairs[edge[0]][edge[1]]['Cosine']))
+
+    # Writing the results to a TSV file
+    output_df = pd.DataFrame(output_results, columns=["CLUSTERID1", "CLUSTERID2", "Cosine"])
 
     output_df.to_csv(result_file_path, sep='\t', index=False)
-    
+
     print(f"Data saved to {result_file_path} successfully.")
 
