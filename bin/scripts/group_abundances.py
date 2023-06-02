@@ -202,6 +202,10 @@ def calculate_groups_metadata(clustersummary_df, clusterinfo_df, metadata_df):
         for attribute in all_attributes:
             # Finding all groups in the attribute
             all_groups = set(clusterinfo_per_group_df[attribute])
+
+            # Converting to string
+            all_groups = [str(x) for x in all_groups]
+
             cluster[attribute] = ",".join(all_groups)
 
     return pd.DataFrame(cluster_summary_list)
