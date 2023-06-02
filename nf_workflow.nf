@@ -8,7 +8,7 @@ params.input_spectra = "data/input_spectra"
 params.input_libraries = "data/library"
 
 // Metadata
-params.input_metadata = "data/metadata.tsv"
+params.metadata_filename = "data/metadata.tsv"
 
 // Parameters
 params.min_cluster_size = "2"
@@ -21,11 +21,18 @@ params.min_peak_intensity = "0.0"
 
 // Molecular Networking Options
 params.similarity = "gnps"
+params.topology = "classic" // or can be transitive
 
 params.parallelism = 24
 params.networking_min_matched_peaks = 6
 params.networking_min_cosine = 0.7
 params.networking_max_shift = 1000
+
+// Topology Filtering
+params.topology_topk = 10
+params.topology_maxcomponent = 100
+
+params.topology_cliquemincosine = 0.7
 
 // Workflow Boiler Plate
 params.OMETALINKING_YAML = "flow_filelinking.yaml"
@@ -221,7 +228,7 @@ process calculateGroupings {
     """
 }
 
-// Filtering the network
+// Filtering the network, this is the classic way
 process filterNetwork {
     publishDir "./nf_output/networking", mode: 'copy'
 
@@ -237,7 +244,55 @@ process filterNetwork {
     python $TOOL_FOLDER/scripts/filter_networking_edges.py \
     $input_pairs \
     filtered_pairs.tsv \
-    filtered_pairs_old_format.tsv
+    filtered_pairs_old_format.tsv \
+    --top_k_val $params.topology_topk \
+    --max_component_size $params.topology_maxcomponent
+    """
+}
+
+process filterNetworkTransitive {
+    publishDir "./nf_output/networking", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    cache false
+
+    input:
+    file input_pairs
+    file input_spectra
+
+    output:
+    file "filtered_pairs.tsv"
+
+    """
+    python $TOOL_FOLDER/scripts/transitive_alignment.py \
+    -c $input_spectra \
+    -m $input_pairs \
+    -p 30 \
+    -th $params.topology_cliquemincosine \
+    -r filtered_pairs.tsv \
+    --minimum_score $params.networking_min_cosine
+    """
+}
+
+// This takes the pairs and adds the component numbers to the table
+process enrichNetworkEdges {
+    publishDir "./nf_output/networking", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file input_pairs
+    file input_clustersummary
+
+    output:
+    file "pairs_with_components.tsv"
+
+    """
+    python $TOOL_FOLDER/scripts/enrich_network_edges.py \
+    $input_clustersummary \
+    $input_pairs \
+    pairs_with_components.tsv
     """
 }
 
@@ -309,8 +364,14 @@ workflow {
     merged_networking_pairs_ch = networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
 
     // Filtering the network
-    filtered_networking_pairs_ch = filterNetwork(merged_networking_pairs_ch)
+    if(params.topology == "classic"){
+        filtered_networking_pairs_ch = filterNetwork(merged_networking_pairs_ch)
+    }
+    else if (params.topology == "transitive"){
+        filtered_networking_pairs_ch = filterNetworkTransitive(merged_networking_pairs_ch, clustered_spectra_ch)
+    }
 
+    filtered_networking_pairs_enriched_ch = enrichNetworkEdges(filtered_networking_pairs_ch, clustersummary_ch)
 
     // Handling Metadata, if we don't have one, we'll set it to be empty
     if(params.metadata_filename.length() > 0){
@@ -331,9 +392,9 @@ workflow {
     clustersummary_with_groups_ch = calculateGroupings(merged_metadata_ch, clustersummary_ch, clusterinfo_ch)
 
     // Adding component and library informaiton
-    clustersummary_with_network_ch = enrichClusterSummary(clustersummary_with_groups_ch, filtered_networking_pairs_ch, gnps_library_results_ch)
+    clustersummary_with_network_ch = enrichClusterSummary(clustersummary_with_groups_ch, filtered_networking_pairs_enriched_ch, gnps_library_results_ch)
 
     // Creating the graphml Network
-    createNetworkGraphML(clustersummary_with_network_ch, filtered_networking_pairs_ch, gnps_library_results_ch)
+    createNetworkGraphML(clustersummary_with_network_ch, filtered_networking_pairs_enriched_ch, gnps_library_results_ch)
 
 }

@@ -46,8 +46,16 @@ def main():
     # Making sure column is an integer
     df_cluster_summary['component'] = df_cluster_summary['component'].astype(int)
 
-    # Adding library matches, merging
-    df_cluster_summary['library matches'] = df_cluster_summary['cluster index'].map(df_library_matches.set_index('#Scan#')['Compound_Name'])
+    # Sort library matches by score
+    df_library_matches = df_library_matches.sort_values(by=['MQScore'], ascending=False)
+
+    # Grouping by the scan
+    df_library_matches = df_library_matches.groupby('#Scan#').head(1)
+
+    # Merging in library matches
+    df_cluster_summary = pd.merge(df_cluster_summary, df_library_matches, how='left', left_on='cluster index', right_on='#Scan#')
+
+    #df_cluster_summary['library matches'] = df_cluster_summary['cluster index'].map(df_library_matches.set_index('#Scan#')['Compound_Name'])
 
     # Exporting summary with components
     df_cluster_summary.to_csv(args.clustersummary_with_network, sep='\t', index=False)

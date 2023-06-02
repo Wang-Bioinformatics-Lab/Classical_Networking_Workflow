@@ -202,6 +202,10 @@ def calculate_groups_metadata(clustersummary_df, clusterinfo_df, metadata_df):
         for attribute in all_attributes:
             # Finding all groups in the attribute
             all_groups = set(clusterinfo_per_group_df[attribute])
+
+            # Converting to string
+            all_groups = [str(x) for x in all_groups]
+
             cluster[attribute] = ",".join(all_groups)
 
     return pd.DataFrame(cluster_summary_list)
@@ -220,10 +224,15 @@ def main():
     # Loading Data
     clustersummary_df = pd.read_csv(args.input_clusterinfosummary_file, sep="\t")
     clustersinfo_df = pd.read_csv(args.input_clusterinfo_file, sep="\t")
-    metadata_df = pd.read_csv(args.input_metadata, sep="\t")
 
-    # Enriching metadata group counts
-    # clustersummary_df = calculate_groups_metadata(clustersummary_df, clustersinfo_df, metadata_df)
+    try:
+        metadata_df = pd.read_csv(args.input_metadata, sep="\t")
+    except:
+        metadata_df = pd.DataFrame()
+
+    if len(metadata_df) > 0:
+        # Enriching metadata group counts
+        clustersummary_df = calculate_groups_metadata(clustersummary_df, clustersinfo_df, metadata_df)
 
     # Writing out the file
     clustersummary_df.to_csv(args.output_clusterinfosummary_filename, sep="\t", index=False)
