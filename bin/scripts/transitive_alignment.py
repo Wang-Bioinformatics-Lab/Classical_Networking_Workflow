@@ -284,7 +284,7 @@ if __name__ == '__main__':
     parser.add_argument('-m', type=str,required=True,default="merged_pairs.tsv", help='raw pairs filename')
     parser.add_argument('-p', type=int,required=False,default=4, help='the number of paralleled processes')
     parser.add_argument('-r', type=str, required=False, default="trans_align_result.tsv", help='output filename')
-    parser.add_argument('-th', type=int, required=False, default=0.8, help='CAST threshold')
+    parser.add_argument('-th', type=float, required=False, default=0.8, help='CAST threshold')
     parser.add_argument('--minimum_score', type=float, required=False, default=0.7, help='Minimum score to keep in output edges')
 
     args = parser.parse_args()

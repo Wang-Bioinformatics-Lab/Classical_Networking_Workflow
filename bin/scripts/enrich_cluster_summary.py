@@ -47,7 +47,7 @@ def main():
     df_cluster_summary['component'] = df_cluster_summary['component'].astype(int)
 
     # Sort library matches by score
-    df_library_matches = df_library_matches.sort_values(by=['Score'], ascending=False)
+    df_library_matches = df_library_matches.sort_values(by=['MQScore'], ascending=False)
 
     # Grouping by the scan
     df_library_matches = df_library_matches.groupby('#Scan#').head(1)

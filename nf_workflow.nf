@@ -32,6 +32,8 @@ params.networking_max_shift = 1000
 params.topology_topk = 10
 params.topology_maxcomponent = 100
 
+params.topology_cliquemincosine = 0.7
+
 // Workflow Boiler Plate
 params.OMETALINKING_YAML = "flow_filelinking.yaml"
 params.OMETAPARAM_YAML = "job_parameters.yaml"
@@ -267,6 +269,7 @@ process filterNetworkTransitive {
     -c $input_spectra \
     -m $input_pairs \
     -p 30 \
+    -th $params.topology_cliquemincosine \
     -r filtered_pairs.tsv \
     --minimum_score $params.networking_min_cosine
     """

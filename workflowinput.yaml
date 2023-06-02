@@ -143,6 +143,12 @@ parameterlist:
       formplaceholder: Enter the topology_maxcomponent
       formvalue: "100"
 
+    - displayname: Transitive Param - Min Clique Cosine
+      paramtype: text
+      nf_paramname: topology_cliquemincosine
+      formplaceholder: Enter the topology_cliquemincosine
+      formvalue: "0.7"
+
     
 
     
