@@ -8,12 +8,22 @@ Views:
     parameters:
         filename: nf_output/summaryresult.tsv
         columns:
+            -   title: "Visualize"
+                data: 
             -   title: "Filename"
                 data: "Filename"
             -   title: "Vendor"
                 data: "Vendor"
             -   title: "Model"
                 data: "Model"
+            -   title: "MS1s"
+                data: "MS1s"
+            -   title: "MS2s"
+                data: "MS2s"
+        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
+        return `
+            <a target="_blank" href="https://dashboard.gnps2.org/?usi1=mzspec:GNPS2:TASK-${task}-input_spectra/${row["Filename"]}">View LCMS Run</a>
+        `;}}]'
 -   name: Cluster Summary
     displayname: Cluster Summary
     viewname: clustersummary
