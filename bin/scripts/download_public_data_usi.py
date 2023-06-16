@@ -10,15 +10,14 @@ import glob
 import shutil
 import requests
 import yaml
+import uuid
 
 def main():
     parser = argparse.ArgumentParser(description='Running library search parallel')
     parser.add_argument('input_download_file', help='input_download_file')
     parser.add_argument('output_folder', help='output_folder')
-    parser.add_argument('--existing_data', default=None, help='folder of existing data')
+    parser.add_argument('--cache_directory', default=None, help='folder of existing data')
     args = parser.parse_args()
-
-    print(args)
 
     # checking the input file exists
     if not os.path.isfile(args.input_download_file):
@@ -44,26 +43,42 @@ def main():
         if r.status_code == 200:
             download_url = r.text
 
-            # download in chunks using requests
-            r = requests.get(download_url, stream=True)
-            with open(os.path.join(args.output_folder, os.path.basename(download_url)), 'wb') as fd:
-                for chunk in r.iter_content(chunk_size=128):
-                    fd.write(chunk)
+            target_filename = os.path.basename(download_url)
+            target_path = os.path.join(args.output_folder, target_filename)
 
-    # copying all files from existing data into the output folder
-    if args.existing_data is not None:
-        src = args.existing_data
-        dst = os.path.join(args.output_folder, os.path.basename(args.existing_data))
-        if os.path.islink(src):
-            linkto = os.readlink(src)
-            os.symlink(linkto, dst)
-        else:
-            shutil.copytree(src, dst)
+            # Checking the cache
+            if args.cache_directory is not None:
+                
+                namespace = uuid.UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
+                hashed_id = str(uuid.uuid3(namespace, usi)).replace("-", "")
 
-        
-        
+                cache_path = os.path.join(args.cache_directory, hashed_id)
+                cache_path = os.path.realpath(cache_path)
+                
+                cache_filename = cache_path + "-" + target_filename[-50:]
 
+                # If we find it, we can create a link to it
+                if os.path.exists(cache_filename):
+                    print("Found in cache", cache_path)
+                    os.symlink(cache_filename, target_path)
 
+                    continue
+
+                # Saving file to cache if we don't
+                r = requests.get(download_url, stream=True)
+                with open(os.path.join(args.output_folder, cache_filename), 'wb') as fd:
+                    for chunk in r.iter_content(chunk_size=128):
+                        fd.write(chunk)
+                        
+                # Creating symlink
+                os.symlink(cache_filename, target_path)
+            
+            else:
+                # download in chunks using requests
+                r = requests.get(download_url, stream=True)
+                with open(target_path, 'wb') as fd:
+                    for chunk in r.iter_content(chunk_size=128):
+                        fd.write(chunk)
 
 if __name__ == "__main__":
     main()
