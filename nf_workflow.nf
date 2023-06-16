@@ -38,6 +38,9 @@ params.topology_cliquemincosine = 0.7
 params.OMETALINKING_YAML = "flow_filelinking.yaml"
 params.OMETAPARAM_YAML = "job_parameters.yaml"
 
+// Downloading Files
+params.download_usi_filename = params.OMETAPARAM_YAML // This can be changed if you want to run locally
+
 TOOL_FOLDER = "$baseDir/bin"
 
 process filesummary {
@@ -47,6 +50,7 @@ process filesummary {
 
     input:
     file inputSpectra
+    val ready
 
     output:
     file 'summaryresult.tsv'
@@ -63,6 +67,7 @@ process mscluster {
 
     input:
     file inputSpectra
+    val ready
 
     output:
     file 'clustering/specs_ms.mgf'
@@ -343,13 +348,42 @@ process createNetworkGraphML {
     """
 }
 
+// downloading all the files
+process prepInputFiles {
+    publishDir "$params.input_spectra", mode: 'copy' // Warning, this is kind of a hack, it'll copy files back to the input folder
+    
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file input_parameters
+
+    output:
+    val true
+    file "*.mzML" optional true
+    file "*.mzXML" optional true
+    file "*.mgf" optional true
+    
+
+    """
+    mkdir downloaded_spectra
+    python $TOOL_FOLDER/scripts/download_public_data_usi.py \
+    $input_parameters \
+    .
+    """
+}
 
 workflow {
+    // Preps input spectrum files
     input_spectra_ch = Channel.fromPath(params.input_spectra)
 
-    filesummary(input_spectra_ch)
+    // Downloads input data
+    (_download_ready, _, _, _) = prepInputFiles(Channel.fromPath(params.download_usi_filename))
 
-    (clustered_spectra_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch)
+    // File summaries
+    filesummary(input_spectra_ch, _download_ready)
+
+    // Clustering
+    (clustered_spectra_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch, _download_ready)
 
     // Library Search
     libraries_ch = Channel.fromPath(params.input_libraries + "/*.mgf" )
