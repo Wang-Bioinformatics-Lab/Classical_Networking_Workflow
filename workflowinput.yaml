@@ -20,6 +20,14 @@ parameterlist:
       selectsinglefile: false
       folderunroll: true
 
+    - displayname: USI Files to Analyze
+      paramtype: textarea
+      nf_paramname: usi
+      formplaceholder: Enter USIs
+      formvalue: ""
+      rows: 4
+      cols: 50
+
     - displayname: Input Spectral Library Folder
       paramtype: fileselector
       nf_paramname: input_libraries
