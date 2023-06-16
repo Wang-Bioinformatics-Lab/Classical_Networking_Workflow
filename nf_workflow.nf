@@ -40,7 +40,7 @@ params.OMETAPARAM_YAML = "job_parameters.yaml"
 
 // Downloading Files
 params.download_usi_filename = params.OMETAPARAM_YAML // This can be changed if you want to run locally
-params.cache = "data/cache"
+params.cache_directory = "data/cache"
 
 TOOL_FOLDER = "$baseDir/bin"
 
@@ -351,13 +351,13 @@ process createNetworkGraphML {
 
 // downloading all the files
 process prepInputFiles {
-    publishDir "$params.input_spectra", mode: 'copy' // Warning, this is kind of a hack, it'll copy files back to the input folder
+    publishDir "$params.input_spectra", mode: 'copyNoFollow' // Warning, this is kind of a hack, it'll copy files back to the input folder
     
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
     file input_parameters
-    file cache
+    file cache_directory
 
     output:
     val true
@@ -370,7 +370,7 @@ process prepInputFiles {
     python $TOOL_FOLDER/scripts/download_public_data_usi.py \
     $input_parameters \
     . \
-    --cache $cache
+    --cache_directory $cache_directory
     """
 }
 
@@ -379,7 +379,7 @@ workflow {
     input_spectra_ch = Channel.fromPath(params.input_spectra)
 
     // Downloads input data
-    (_download_ready, _, _, _) = prepInputFiles(Channel.fromPath(params.download_usi_filename), Channel.fromPath(params.cache))
+    (_download_ready, _, _, _) = prepInputFiles(Channel.fromPath(params.download_usi_filename), Channel.fromPath(params.cache_directory))
 
     // File summaries
     filesummary(input_spectra_ch, _download_ready)

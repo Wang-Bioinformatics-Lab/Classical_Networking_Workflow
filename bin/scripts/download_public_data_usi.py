@@ -47,7 +47,7 @@ def main():
             target_path = os.path.join(args.output_folder, target_filename)
 
             # Checking the cache
-            if args.cache_directory is not None:
+            if args.cache_directory is not None and os.path.exists(args.cache_directory):
                 
                 namespace = uuid.UUID('6ba7b810-9dad-11d1-80b4-00c04fd430c8')
                 hashed_id = str(uuid.uuid3(namespace, usi)).replace("-", "")
@@ -66,13 +66,18 @@ def main():
 
                 # Saving file to cache if we don't
                 r = requests.get(download_url, stream=True)
-                with open(os.path.join(args.output_folder, cache_filename), 'wb') as fd:
-                    for chunk in r.iter_content(chunk_size=128):
-                        fd.write(chunk)
+                try:
+                    with open(os.path.join(args.output_folder, cache_filename), 'wb') as fd:
+                        for chunk in r.iter_content(chunk_size=128):
+                            fd.write(chunk)
                         
-                # Creating symlink
-                os.symlink(cache_filename, target_path)
-            
+                    # Creating symlink
+                    os.symlink(cache_filename, target_path)
+                except:
+                    # We are likely writing to read only file system for the cache
+                    with open(target_path, 'wb') as fd:
+                        for chunk in r.iter_content(chunk_size=128):
+                            fd.write(chunk)
             else:
                 # download in chunks using requests
                 r = requests.get(download_url, stream=True)
