@@ -12,6 +12,24 @@ import requests
 import yaml
 import uuid
 
+def _determine_ms_filename(download_url):
+    if "metabolomicsworkbench.org" in download_url:
+        # Lets parse the arguments, using urlparse
+        from urllib.parse import urlparse, parse_qs
+        parsed_params = urlparse(download_url)
+        filename = parse_qs(parsed_params.query)['F'][0]
+
+        return os.path.basename(filename)
+
+    # TODO: Work for MassIVE
+    # TODO: Work for GNPS
+    # TODO: Work for PRIDE
+    # TODO: Work for Metabolights
+
+    return os.path.basename(download_url)
+
+        
+
 def main():
     parser = argparse.ArgumentParser(description='Running library search parallel')
     parser.add_argument('input_download_file', help='input_download_file')
@@ -43,7 +61,7 @@ def main():
         if r.status_code == 200:
             download_url = r.text
 
-            target_filename = os.path.basename(download_url)
+            target_filename = _determine_ms_filename(download_url)
             target_path = os.path.join(args.output_folder, target_filename)
 
             # Checking the cache
