@@ -1,6 +1,4 @@
 #!/usr/bin/python
-
-
 import sys
 import os
 import json
@@ -11,6 +9,7 @@ import pandas as pd
 import glob
 import shutil
 import requests
+import yaml
 
 def main():
     parser = argparse.ArgumentParser(description='Running library search parallel')
@@ -27,8 +26,10 @@ def main():
         exit(0)
 
     # Checking the file extension
-    if args.input_download_file.endswith(".json"):
-        usi_list = json.load(open(args.input_download_file))["usi"]
+    if args.input_download_file.endswith(".yaml"):
+        # Loading yaml file
+        parameters = yaml.load(open(args.input_download_file), Loader=yaml.SafeLoader)
+        usi_list = parameters["usi"].split("\n")
     elif args.input_download_file.endswith(".tsv"):
         df = pd.read_csv(args.input_download_file, sep="\t")
         usi_list = df["usi"].tolist()

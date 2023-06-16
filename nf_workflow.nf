@@ -365,7 +365,6 @@ process prepInputFiles {
     
 
     """
-    mkdir downloaded_spectra
     python $TOOL_FOLDER/scripts/download_public_data_usi.py \
     $input_parameters \
     .
