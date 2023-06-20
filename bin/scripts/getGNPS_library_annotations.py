@@ -14,6 +14,11 @@ def enrich_output(input_filename, output_filename, topk=None):
     spectrum_id_cache = {}
     molecule_explorer_df = pd.DataFrame(ming_gnps_library.get_molecule_explorer_dataset_data())
 
+    if not os.path.exists(input_filename):
+        open(output_filename, "w").close()
+        print("Input file does not exist")
+        exit(0)
+    
     input_results_df = pd.read_csv(input_filename, sep="\t")
 
     # Here we will try to filter to topk
