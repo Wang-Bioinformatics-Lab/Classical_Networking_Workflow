@@ -24,6 +24,7 @@ Views:
         return `
             <a target="_blank" href="https://dashboard.gnps2.org/?usi1=mzspec:GNPS2:TASK-${task}-input_spectra/${row["Filename"]}">View LCMS Run</a>
         `;}}]'
+
 -   name: Cluster Summary
     displayname: Cluster Summary
     viewname: clustersummary
@@ -38,6 +39,23 @@ Views:
             -   title: "# spectra"
                 data: "number of spectra"
 
+-   name: Raw Spectra List
+    displayname: Raw Spectra List
+    viewname: rawspectra
+    displaytype: datatable_serverbig
+    parameters:
+        filename: nf_output/clustering/clusterinfo.tsv
+        columns:
+            -   title: "Cluster"
+                data: "#ClusterIdx"
+            -   title: "Filename"
+                data: "#Filename"
+            -   title: "Scan"
+                data: "#Scan"
+            -   title: "Parent Mass"
+                data: "#ParentMass"
+            -   title: "RT"
+                data: "#RetTime"
 
 -   name: Library Results
     displayname: Library Results
@@ -56,7 +74,7 @@ Views:
 -   name: Pairs List
     displayname: Pairs List
     viewname: pairslist
-    displaytype: datatable
+    displaytype: datatable_serverbig
     parameters:
         filename: nf_output/networking/pairs_with_components.tsv
         columns:
