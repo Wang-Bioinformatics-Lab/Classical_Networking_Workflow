@@ -104,6 +104,13 @@ parameterlist:
           display: "yes"
         - value: "no"
           display: "no"
+      
+    - displayname: MassQL Filtering
+      paramtype: text
+      nf_paramname: massql_filter
+      formplaceholder: Enter the massql_filter
+      formvalue: "None"
+      tooltip: "massql_filter"
 
     - displayname: Networking Parameters
       paramtype: section
