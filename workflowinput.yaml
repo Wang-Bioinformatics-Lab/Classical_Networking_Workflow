@@ -110,7 +110,7 @@ parameterlist:
       nf_paramname: massql_filter
       formplaceholder: Enter the massql_filter
       formvalue: "None"
-      tooltip: "massql_filter"
+      tooltip: "This MassQL statement will filter the data before molecular networking scoring"
 
     - displayname: Networking Parameters
       paramtype: section
