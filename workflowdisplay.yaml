@@ -62,7 +62,7 @@ Views:
                 data: "MQScore"
         columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
         return `
-            <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["#Scan#"]}"&usi2=mzspec:GNPS:GNPS-LIBRARY:accession:${row[""]}>View Mirror</a>
+            <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["#Scan#"]}"&usi2=mzspec:GNPS:GNPS-LIBRARY:accession:${row["SpectrumID"]}>View Mirror</a>
         `;}}]'
 
 -   name: Raw Spectra List
@@ -72,6 +72,8 @@ Views:
     parameters:
         filename: nf_output/clustering/clusterinfo.tsv
         columns:
+            -   title: "View"
+                data: 
             -   title: "Cluster"
                 data: "#ClusterIdx"
             -   title: "Filename"
@@ -82,6 +84,13 @@ Views:
                 data: "#ParentMass"
             -   title: "RT"
                 data: "#RetTime"
+        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
+        return `
+            <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-input_spectra/${row["#Filename"]}:scan:${row["#Scan"]}">View Original Spectrum</a>
+            <br>
+            <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-input_spectra/${row["#Filename"]}:scan:${row["#Scan"]}"&usi2=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["#ClusterIdx"]}>View Mirror</a>
+        `;}}]'
+
 
 -   name: Network Pairs List
     displayname: Network Pairs List
@@ -104,6 +113,10 @@ Views:
                 data: MatchedPeaks
             -   title: "ComponentIndex"
                 data: ComponentIndex
+        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
+        return `
+            <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["CLUSTERID1"]}"&usi2=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["CLUSTERID2"]}>View Mirror</a>
+        `;}}]'
                 
 -   name: section
     displayname: Network Visualizations
