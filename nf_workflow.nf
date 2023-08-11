@@ -34,6 +34,9 @@ params.topology_maxcomponent = 100
 
 params.topology_cliquemincosine = 0.7
 
+// Spectral Filtering
+params.massql_filter = "None"
+
 // Workflow Boiler Plate
 params.OMETALINKING_YAML = "flow_filelinking.yaml"
 params.OMETAPARAM_YAML = "job_parameters.yaml"
@@ -86,6 +89,26 @@ process mscluster {
     --fragment_tolerance $params.fragment_tolerance \
     --min_peak_intensity $params.min_peak_intensity
     """
+}
+
+process massqlFilterSpectra {
+    publishDir "./nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file inputSpectra
+
+    output:
+    file 'specs_ms_filtered.mgf'
+
+    """
+    python $TOOL_FOLDER/scripts/massql_filter_spectra.py \
+    $inputSpectra \
+    specs_ms_filtered.mgf \
+    --massql $params.massql_filter
+    """
+
 }
 
 // Library Search
@@ -385,7 +408,14 @@ workflow {
     filesummary(input_spectra_ch, _download_ready)
 
     // Clustering
-    (clustered_spectra_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch, _download_ready)
+    (clustered_spectra_intermediate_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch, _download_ready)
+
+    if(params.massql_filter != "None"){
+        clustered_spectra_ch = massqlFilterSpectra(clustered_spectra_intermediate_ch)
+    }
+    else{
+        clustered_spectra_ch = clustered_spectra_intermediate_ch
+    }
 
     // Library Search
     libraries_ch = Channel.fromPath(params.input_libraries + "/*.mgf" )
