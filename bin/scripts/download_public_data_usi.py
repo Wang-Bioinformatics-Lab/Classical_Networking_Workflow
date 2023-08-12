@@ -126,6 +126,7 @@ def main():
                 if r.status_code == 200:
                     output_result_dict["status"] = "DOWNLOADED_INTO_CACHE"
                 else:
+                    # TODO: we should remove the file
                     output_result_dict["status"] = "DOWNLOAD_ERROR"
             else:
                 # download in chunks using requests
