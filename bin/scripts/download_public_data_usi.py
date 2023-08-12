@@ -21,8 +21,15 @@ def _determine_ms_filename(download_url):
 
         return os.path.basename(filename)
 
-    # TODO: Work for MassIVE
-    # TODO: Work for GNPS
+    # MassIVE and GNPS
+    if "massive.ucsd.edu" in download_url:
+        # Lets parse the arguments, using urlparse
+        from urllib.parse import urlparse, parse_qs
+        parsed_params = urlparse(download_url)
+        filename = parse_qs(parsed_params.query)['file'][0]
+
+        return os.path.basename(filename)
+
     # TODO: Work for PRIDE
     # TODO: Work for Metabolights
 
