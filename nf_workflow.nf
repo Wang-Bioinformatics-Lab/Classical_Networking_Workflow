@@ -94,7 +94,7 @@ process mscluster {
 process massqlFilterSpectra {
     publishDir "./nf_output", mode: 'copy'
 
-    conda "$TOOL_FOLDER/conda_env.yml"
+    conda "$TOOL_FOLDER/conda_env_massql.yml"
 
     input:
     file inputSpectra
@@ -106,7 +106,7 @@ process massqlFilterSpectra {
     python $TOOL_FOLDER/scripts/massql_filter_spectra.py \
     $inputSpectra \
     specs_ms_filtered.mgf \
-    --massql $params.massql_filter
+    --massql "$params.massql_filter"
     """
 
 }
