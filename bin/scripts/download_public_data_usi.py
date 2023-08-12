@@ -41,6 +41,7 @@ def main():
     parser = argparse.ArgumentParser(description='Running library search parallel')
     parser.add_argument('input_download_file', help='input_download_file')
     parser.add_argument('output_folder', help='output_folder')
+    parser.add_argument('output_summary', help='output_summary')
     parser.add_argument('--cache_directory', default=None, help='folder of existing data')
     args = parser.parse_args()
 
@@ -58,6 +59,11 @@ def main():
         df = pd.read_csv(args.input_download_file, sep="\t")
         usi_list = df["usi"].tolist()
 
+    # Cleaning USI list
+    usi_list = [usi.lstrip().rstrip() for usi in usi_list]
+
+    output_result_list = []
+
     # Lets download these files
     for usi in usi_list:
         # Getting the path to the original file
@@ -65,8 +71,15 @@ def main():
         params = {"usi": usi}
         r = requests.get(url, params=params)
 
+        output_result_dict = {}
+        output_result_dict["usi"] = usi
+
+        output_result_list.append(output_result_dict)
+
         if r.status_code == 200:
             download_url = r.text
+
+            output_result_dict["download_url"] = download_url
 
             target_filename = _determine_ms_filename(download_url)
             target_path = os.path.join(args.output_folder, target_filename)
@@ -82,10 +95,15 @@ def main():
                 
                 cache_filename = cache_path + "-" + target_filename[-50:].rstrip()
 
+
+                output_result_dict["cache_filename"] = os.path.basename(cache_filename)
+
                 # If we find it, we can create a link to it
                 if os.path.exists(cache_filename):
                     print("Found in cache", cache_path)
                     os.symlink(cache_filename, target_path)
+                    
+                    output_result_dict["status"] = "EXISTS_IN_CACHE"
 
                     continue
 
@@ -103,12 +121,27 @@ def main():
                     with open(target_path, 'wb') as fd:
                         for chunk in r.iter_content(chunk_size=128):
                             fd.write(chunk)
+
+                # Checking the status code
+                if r.status_code == 200:
+                    output_result_dict["status"] = "DOWNLOADED_INTO_CACHE"
+                else:
+                    output_result_dict["status"] = "DOWNLOAD_ERROR"
             else:
                 # download in chunks using requests
                 r = requests.get(download_url, stream=True)
                 with open(target_path, 'wb') as fd:
                     for chunk in r.iter_content(chunk_size=128):
                         fd.write(chunk)
+
+                output_result_dict["status"] = "DOWNLOADED_INTO_OUTPUT_WITHOUT_CACHE"
+            
+        else:
+            output_result_dict["status"] = "ERROR"
+
+    if len(output_result_list) > 0:
+        df = pd.DataFrame(output_result_list)
+        df.to_csv(args.output_summary, sep="\t", index=False)
 
 if __name__ == "__main__":
     main()

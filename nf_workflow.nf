@@ -386,13 +386,13 @@ process prepInputFiles {
     val true
     file "*.mzML" optional true
     file "*.mzXML" optional true
-    file "*.mgf" optional true
-    
+    file "*.mgf" optional true 
 
     """
     python $TOOL_FOLDER/scripts/download_public_data_usi.py \
     $input_parameters \
     . \
+    output_summary.tsv \
     --cache_directory $cache_directory
     """
 }
