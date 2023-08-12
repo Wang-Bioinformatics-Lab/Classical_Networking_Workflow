@@ -73,7 +73,7 @@ def main():
                 cache_path = os.path.join(args.cache_directory, hashed_id)
                 cache_path = os.path.realpath(cache_path)
                 
-                cache_filename = cache_path + "-" + target_filename[-50:]
+                cache_filename = cache_path + "-" + target_filename[-50:].rstrip()
 
                 # If we find it, we can create a link to it
                 if os.path.exists(cache_filename):
