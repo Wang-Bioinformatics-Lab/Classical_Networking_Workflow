@@ -28,16 +28,42 @@ Views:
 -   name: Cluster Summary
     displayname: Cluster Summary
     viewname: clustersummary
-    displaytype: datatable
+    displaytype: datatable_serverbig
     parameters:
         filename: nf_output/networking/clustersummary_with_network.tsv
         columns:
+            -   title: "View"
+                data: 
             -   title: "Cluster"
                 data: "cluster index"
             -   title: "Parent mass"
                 data: "parent mass"
             -   title: "# spectra"
                 data: "number of spectra"
+        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
+        return `
+            <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["cluster index"]}">View Spectrum</a>
+        `;}}]'
+
+-   name: Library Match Results
+    displayname: Library Match Results
+    viewname: librarymatches
+    displaytype: datatable_serverbig
+    parameters:
+        filename: nf_output/library/merged_results_with_gnps.tsv
+        columns:
+            -   title: "View"
+                data: 
+            -   title: "#Scan#"
+                data: "#Scan#"
+            -   title: "Compound_Name"
+                data: "Compound_Name"
+            -   title: "MQScore"
+                data: "MQScore"
+        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
+        return `
+            <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["#Scan#"]}"&usi2=mzspec:GNPS:GNPS-LIBRARY:accession:${row["SpectrumID"]}>View Mirror</a>
+        `;}}]'
 
 -   name: Raw Spectra List
     displayname: Raw Spectra List
@@ -46,6 +72,8 @@ Views:
     parameters:
         filename: nf_output/clustering/clusterinfo.tsv
         columns:
+            -   title: "View"
+                data: 
             -   title: "Cluster"
                 data: "#ClusterIdx"
             -   title: "Filename"
@@ -56,23 +84,16 @@ Views:
                 data: "#ParentMass"
             -   title: "RT"
                 data: "#RetTime"
+        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
+        return `
+            <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-input_spectra/${row["#Filename"]}:scan:${row["#Scan"]}">View Original Spectrum</a>
+            <br>
+            <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-input_spectra/${row["#Filename"]}:scan:${row["#Scan"]}"&usi2=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["#ClusterIdx"]}>View Mirror</a>
+        `;}}]'
 
--   name: Library Results
-    displayname: Library Results
-    viewname: librarymatches
-    displaytype: datatable
-    parameters:
-        filename: nf_output/library/merged_results_with_gnps.tsv
-        columns:
-            -   title: "#Scan#"
-                data: "#Scan#"
-            -   title: "Compound_Name"
-                data: "Compound_Name"
-            -   title: "MQScore"
-                data: "MQScore"
-    
--   name: Pairs List
-    displayname: Pairs List
+
+-   name: Network Pairs List
+    displayname: Network Pairs List
     viewname: pairslist
     displaytype: datatable_serverbig
     parameters:
@@ -92,6 +113,10 @@ Views:
                 data: MatchedPeaks
             -   title: "ComponentIndex"
                 data: ComponentIndex
+        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
+        return `
+            <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["CLUSTERID1"]}"&usi2=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["CLUSTERID2"]}>View Mirror</a>
+        `;}}]'
                 
 -   name: section
     displayname: Network Visualizations
