@@ -84,6 +84,10 @@ def main():
             target_filename = _determine_ms_filename(download_url)
             target_path = os.path.join(args.output_folder, target_filename)
 
+            # TODO: we should make an option to nest these to get around the file size limit
+
+            # TODO: make sure that if a filename is repeated, we drop one of them because some software does not like it
+
             # Checking the cache
             if args.cache_directory is not None and os.path.exists(args.cache_directory):
                 
@@ -95,39 +99,45 @@ def main():
                 
                 cache_filename = cache_path + "-" + target_filename[-50:].rstrip()
 
-
                 output_result_dict["cache_filename"] = os.path.basename(cache_filename)
 
                 # If we find it, we can create a link to it
                 if os.path.exists(cache_filename):
                     print("Found in cache", cache_path)
-                    os.symlink(cache_filename, target_path)
                     
-                    output_result_dict["status"] = "EXISTS_IN_CACHE"
+                    if not os.path.exists(target_path):
+                        os.symlink(cache_filename, target_path)
+                        output_result_dict["status"] = "EXISTS_IN_CACHE"
+                    else:
+                        output_result_dict["status"] = "DUPLICATE_FILENAME"
 
                     continue
-
-                # Saving file to cache if we don't
-                r = requests.get(download_url, stream=True)
-                try:
-                    with open(os.path.join(args.output_folder, cache_filename), 'wb') as fd:
-                        for chunk in r.iter_content(chunk_size=128):
-                            fd.write(chunk)
-                        
-                    # Creating symlink
-                    os.symlink(cache_filename, target_path)
-                except:
-                    # We are likely writing to read only file system for the cache
-                    with open(target_path, 'wb') as fd:
-                        for chunk in r.iter_content(chunk_size=128):
-                            fd.write(chunk)
-
-                # Checking the status code
-                if r.status_code == 200:
-                    output_result_dict["status"] = "DOWNLOADED_INTO_CACHE"
                 else:
-                    # TODO: we should remove the file
-                    output_result_dict["status"] = "DOWNLOAD_ERROR"
+                    # Saving file to cache if we don't
+                    r = requests.get(download_url, stream=True)
+                    try:
+                        with open(os.path.join(args.output_folder, cache_filename), 'wb') as fd:
+                            for chunk in r.iter_content(chunk_size=128):
+                                fd.write(chunk)
+                            
+                        # Creating symlink
+                        if not os.path.exists(target_path):
+                            os.symlink(cache_filename, target_path)
+                            output_result_dict["status"] = "EXISTS_IN_CACHE"
+                        else:
+                            output_result_dict["status"] = "DUPLICATE_FILENAME"
+                    except:
+                        # We are likely writing to read only file system for the cache
+                        with open(target_path, 'wb') as fd:
+                            for chunk in r.iter_content(chunk_size=128):
+                                fd.write(chunk)
+
+                    # Checking the status code
+                    if r.status_code == 200:
+                        output_result_dict["status"] = "DOWNLOADED_INTO_CACHE"
+                    else:
+                        # TODO: we should remove the file
+                        output_result_dict["status"] = "DOWNLOAD_ERROR"
             else:
                 # download in chunks using requests
                 r = requests.get(download_url, stream=True)
