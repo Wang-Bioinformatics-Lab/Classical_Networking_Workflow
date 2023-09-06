@@ -294,7 +294,7 @@ process filterNetworkTransitive {
     file "filtered_pairs.tsv"
 
     """
-    python $TOOL_FOLDER/scripts/transitive_alignment.py \
+    python $TOOL_FOLDER/scripts/transitive_alignment/Transitive_Alignment_MN.py \
     -c $input_spectra \
     -m $input_pairs \
     -p 30 \

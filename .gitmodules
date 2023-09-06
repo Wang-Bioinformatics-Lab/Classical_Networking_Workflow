@@ -4,3 +4,6 @@
 [submodule "GNPS_sharedcode"]
 	path = GNPS_sharedcode
 	url = https://github.com/mwang87/GNPS_sharedcode.git
+[submodule "bin/scripts/transitive_alignment"]
+	path = bin/scripts/transitive_alignment
+	url = https://github.com/XianghuWang-287/Transitive-alignment-for-GNPS-network-workflow.git
