@@ -37,6 +37,20 @@ params.topology_cliquemincosine = 0.7
 // Spectral Filtering
 params.massql_filter = "None"
 
+// Library Search Parameters
+params.library_topk = 1
+
+params.library_min_cosine = 0.7
+params.library_min_matched_peaks = 6
+
+//TODO: Implement This
+params.library_filter_precursor = 1
+params.library_filter_window = 1
+
+//TODO: Implement This
+params.library_analog_search = "0"
+params.library_analog_max_shift = 1999
+
 // Workflow Boiler Plate
 params.OMETALINKING_YAML = "flow_filelinking.yaml"
 params.OMETAPARAM_YAML = "job_parameters.yaml"
@@ -127,7 +141,13 @@ process librarySearchData {
     python $TOOL_FOLDER/scripts/library_search_wrapper.py \
     $input_spectrum $input_library search_results \
     $TOOL_FOLDER/binaries/convert \
-    $TOOL_FOLDER/binaries/main_execmodule.allcandidates
+    $TOOL_FOLDER/binaries/main_execmodule.allcandidates \
+    --pm_tolerance $params.pm_tolerance \
+    --fragment_tolerance $params.fragment_tolerance \
+    --topk $params.library_topk \
+    --library_min_cosine $params.library_min_cosine \
+    --library_min_matched_peaks $params.library_min_matched_peaks \
+    --analog_search $params.library_analog_search
     """
 }
 
