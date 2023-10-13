@@ -10,9 +10,10 @@ params.input_libraries = "data/library"
 // Metadata
 params.metadata_filename = "data/metadata.tsv"
 
-// Parameters
+// Clustering Parameters
 params.min_cluster_size = "2"
 
+// Tolerance Parameters
 params.pm_tolerance = "2.0"
 params.fragment_tolerance = "0.5"
 
