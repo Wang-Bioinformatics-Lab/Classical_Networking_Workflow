@@ -8,6 +8,7 @@ params.input_spectra = "data/input_spectra"
 params.input_libraries = "data/library"
 
 // Metadata
+params.redu_metadata_integration = "No" // Yes, means we go to ReDU and grab all the relevant metadata
 params.metadata_filename = "data/metadata.tsv"
 
 // Clustering Parameters
@@ -106,6 +107,7 @@ process mscluster {
     """
 }
 
+// TODO: Finish Implementing this, as this is currently an no-op
 process massqlFilterSpectra {
     publishDir "./nf_output", mode: 'copy'
 
@@ -235,7 +237,6 @@ process calculatePairs {
 }
 
 // Creating the metadata file
-// TODO: Finish this
 process createMetadataFile {
     publishDir "./nf_output/metadata", mode: 'copy'
 
@@ -243,6 +244,7 @@ process createMetadataFile {
 
     input:
     file input_metadata
+    file usi_information
 
     output:
     file "merged_metadata.tsv"
@@ -251,7 +253,9 @@ process createMetadataFile {
     """
     python $TOOL_FOLDER/scripts/merge_metadata.py \
     $input_metadata \
-    merged_metadata.tsv
+    $usi_information \
+    merged_metadata.tsv \
+    --include_redu $params.redu_metadata_integration
     """
 }
 
@@ -423,7 +427,8 @@ workflow {
     input_spectra_ch = Channel.fromPath(params.input_spectra)
 
     // Downloads input data
-    (_download_ready, _, _, _) = prepInputFiles(Channel.fromPath(params.download_usi_filename), Channel.fromPath(params.cache_directory))
+    usi_download_ch = Channel.fromPath(params.download_usi_filename)
+    (_download_ready, _, _, _) = prepInputFiles(usi_download_ch, Channel.fromPath(params.cache_directory))
 
     // File summaries
     filesummary(input_spectra_ch, _download_ready)
@@ -476,8 +481,11 @@ workflow {
         input_metadata_ch = Channel.of(file("NO_FILE"))
     }
 
-    merged_metadata_ch = createMetadataFile(input_metadata_ch)
-
+    
+    // We will also include ReDU Metadata if desired
+    merged_metadata_ch = createMetadataFile(input_metadata_ch, usi_download_ch)
+    
+    
     // Enriching the network with group mappings
     clustersummary_with_groups_ch = calculateGroupings(merged_metadata_ch, clustersummary_ch, clusterinfo_ch)
 
