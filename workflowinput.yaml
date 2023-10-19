@@ -47,6 +47,16 @@ parameterlist:
       optional: true
       selectsinglefile: true
       folderunroll: true
+    
+    - displayname: Integrate ReDU Metadata for Public USIs
+      paramtype: select
+      nf_paramname: redu_metadata_integration
+      formvalue: "No"
+      options:
+        - value: "Yes"
+          display: "Yes"
+        - value: "No"
+          display: "No"
 
     - displayname: General Parameters
       paramtype: section

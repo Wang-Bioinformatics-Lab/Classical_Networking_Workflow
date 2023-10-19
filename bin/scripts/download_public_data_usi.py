@@ -35,7 +35,20 @@ def _determine_ms_filename(download_url):
 
     return os.path.basename(download_url)
 
-        
+def load_usi_list(input_filename):
+    # Checking the file extension
+    if input_filename.endswith(".yaml"):
+        # Loading yaml file
+        parameters = yaml.load(open(input_filename), Loader=yaml.SafeLoader)
+        usi_list = parameters["usi"].split("\n")
+    elif input_filename.endswith(".tsv"):
+        df = pd.read_csv(input_filename, sep="\t")
+        usi_list = df["usi"].tolist()
+
+    # Cleaning USI list
+    usi_list = [usi.lstrip().rstrip() for usi in usi_list]
+
+    return usi_list
 
 def main():
     parser = argparse.ArgumentParser(description='Running library search parallel')
@@ -50,17 +63,7 @@ def main():
         print("Input file does not exist")
         exit(0)
 
-    # Checking the file extension
-    if args.input_download_file.endswith(".yaml"):
-        # Loading yaml file
-        parameters = yaml.load(open(args.input_download_file), Loader=yaml.SafeLoader)
-        usi_list = parameters["usi"].split("\n")
-    elif args.input_download_file.endswith(".tsv"):
-        df = pd.read_csv(args.input_download_file, sep="\t")
-        usi_list = df["usi"].tolist()
-
-    # Cleaning USI list
-    usi_list = [usi.lstrip().rstrip() for usi in usi_list]
+    usi_list = load_usi_list(args.input_download_file)
 
     output_result_list = []
 
