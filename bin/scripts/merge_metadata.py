@@ -63,6 +63,13 @@ def match_usi_to_redu_metadata(usi_list, redu_df):
     except:
         pass
     
+    # Clean up accession
+    try:
+        merged_df["ATTRIBUTE_DatasetAccession"] = merged_df["ATTRIBUTE_DatasetAccession_x"]
+        merged_df = merged_df.drop(columns=["ATTRIBUTE_DatasetAccession_x", "ATTRIBUTE_DatasetAccession_y"])
+    except:
+        pass
+    
     # TODO: make sure appropriate columns have attribute in redu metdata
     all_columns = list(merged_df.columns)
     redu_columns = ["SampleType"]
