@@ -68,6 +68,8 @@ def enrich_output(input_filename, output_filename, topk=None):
         except:
             continue
 
+        # TODO: if there is an error in getting the IDs, we should just try to pass as much through as possible
+
         output_result_dict = {}
 
         output_result_dict["SpectrumID"] = (spectrum_id)
