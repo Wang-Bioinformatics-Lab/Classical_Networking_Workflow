@@ -9,6 +9,7 @@ params.input_libraries = "data/library"
 
 // Metadata
 params.redu_metadata_integration = "No" // Yes, means we go to ReDU and grab all the relevant metadata
+params.metadata_per_file_grouping = "No" // Yes means that each file can be its own group
 params.metadata_filename = "data/metadata.tsv"
 
 // Clustering Parameters
@@ -245,6 +246,7 @@ process createMetadataFile {
     input:
     file input_metadata
     file usi_information
+    file input_spectra_folder
 
     output:
     file "merged_metadata.tsv"
@@ -255,7 +257,9 @@ process createMetadataFile {
     $input_metadata \
     $usi_information \
     merged_metadata.tsv \
-    --include_redu $params.redu_metadata_integration
+    --include_redu $params.redu_metadata_integration \
+    --per_file_grouping $params.metadata_per_file_grouping \
+    --spectra_folder $input_spectra_folder
     """
 }
 
@@ -483,7 +487,7 @@ workflow {
 
     
     // We will also include ReDU Metadata if desired
-    merged_metadata_ch = createMetadataFile(input_metadata_ch, usi_download_ch)
+    merged_metadata_ch = createMetadataFile(input_metadata_ch, usi_download_ch, input_spectra_ch)
     
     
     // Enriching the network with group mappings

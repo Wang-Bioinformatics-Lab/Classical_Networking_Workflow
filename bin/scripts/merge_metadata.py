@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import argparse
 import yaml
-
+import glob
 
 def _load_metadata(input_filename):
     # look at extension
@@ -79,7 +79,6 @@ def match_usi_to_redu_metadata(usi_list, redu_df):
             # rename the column with ATTRIBUTE_ prefix using rename mechanism
             merged_df = merged_df.rename(columns={column: "ATTRIBUTE_" + column})
 
-
     return merged_df
 
 def main():
@@ -90,6 +89,8 @@ def main():
     parser.add_argument('merged_metadata')
 
     parser.add_argument('--include_redu', default="No", help='Include redu metadata integration')
+    parser.add_argument('--per_file_grouping', default="No", help='Treat each file as a group')
+    parser.add_argument('--spectra_folder', default=None, help='Input Folder of Spectra Files')
 
     args = parser.parse_args()
 
@@ -114,6 +115,31 @@ def main():
             input_metadata = pd.merge(input_metadata, merged_df, on="filename", how="left")
         else:
             input_metadata = merged_df
+
+    # If we want per file grouping
+    if args.per_file_grouping == "Yes":
+        all_input_files = []
+        
+        all_input_files += glob.glob(args.spectra_folder + "/*.mzML")
+        all_input_files += glob.glob(args.spectra_folder + "/*.mzml")
+        all_input_files += glob.glob(args.spectra_folder + "/*.mzXML")
+        all_input_files += glob.glob(args.spectra_folder + "/*.mzxml")
+        all_input_files += glob.glob(args.spectra_folder + "/*.mgf")
+        all_input_files += glob.glob(args.spectra_folder + "/*.MGF")
+
+        new_metadata = pd.DataFrame()
+
+        # getting basename for all input files
+        all_input_files = [os.path.basename(x) for x in all_input_files]
+
+        new_metadata["filename"] = all_input_files
+        new_metadata["ATTRIBUTE_PerFileGrouping"] = new_metadata["filename"]
+
+        # joining it with the input_metadata
+        if "filename" in input_metadata:
+            input_metadata = pd.merge(input_metadata, new_metadata, on="filename", how="left")
+        else:
+            input_metadata = new_metadata
 
     # outputing metadata
     input_metadata.to_csv(args.merged_metadata, sep="\t", index=False)
