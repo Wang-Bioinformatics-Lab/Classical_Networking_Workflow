@@ -58,6 +58,16 @@ parameterlist:
         - value: "No"
           display: "No"
 
+    - displayname: Treat Single Files as a Group
+      paramtype: select
+      nf_paramname: metadata_per_file_grouping
+      formvalue: "No"
+      options:
+        - value: "Yes"
+          display: "Yes"
+        - value: "No"
+          display: "No"
+
     - displayname: General Parameters
       paramtype: section
 
