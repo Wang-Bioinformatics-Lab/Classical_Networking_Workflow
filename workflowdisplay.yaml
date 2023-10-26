@@ -170,3 +170,10 @@ Views:
     displaytype: download
     parameters:
         filename: nf_output/clustering/specs_ms.mgf
+
+-   name: Download Merged Metadata File
+    displayname: Download Merged Metadata File
+    viewname: metadatadownload
+    displaytype: download
+    parameters:
+        filename: nf_output/metadata/merged_metadata.tsv
