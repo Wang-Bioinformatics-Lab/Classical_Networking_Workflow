@@ -362,6 +362,8 @@ process createNetworkGraphML {
 
     output:
     file "network.graphml"
+    file '*.graphml'
+    file '*.tsv'
 
     """
     python $TOOL_FOLDER/scripts/create_network_graphml.py \

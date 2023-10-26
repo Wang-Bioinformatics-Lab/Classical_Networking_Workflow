@@ -81,7 +81,20 @@ def main():
     G = convert_network(G)
 
     nx.write_graphml(G, args.output_graphml, infer_numeric_types=True)
-
+    graph_filename = os.path.splitext(args.output_graphml)[0]
+    components = list(nx.connected_components(G))
+    for i, component in enumerate(components):
+        subgraph = G.subgraph(component)
+        component_id = i + 1
+        component_filename = f"{graph_filename}_{component_id}.graphml"
+        nx.write_graphml(subgraph, component_filename)
+    with open("component_summary.tsv", "w") as tsv_file:
+        tsv_file.write("Component ID\tGraphML File\tNumber of Nodes\n")
+        for i, component in enumerate(components):
+            component_id = i + 1
+            component_filename = f"{graph_filename}_{component_id}.graphml"
+            num_nodes = len(component)
+            tsv_file.write(f"{component_id}\t{component_filename}\t{num_nodes}\n")
 
 
 
