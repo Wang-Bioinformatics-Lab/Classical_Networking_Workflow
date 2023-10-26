@@ -94,6 +94,8 @@ Views:
                 data: "#ParentMass"
             -   title: "RT"
                 data: "#RetTime"
+            -   title: "PrecIntensity"
+                data: "#PrecIntensity"
         columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
         return `
             <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-input_spectra/${row["#Filename"]}:scan:${row["#Scan"]}">View Original Spectrum</a>
