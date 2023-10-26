@@ -25,22 +25,16 @@ def convert_network(G):
 
         # Fixing Group Names
         for column in group_columns:
-            print(column)
-
-            attribute = column.split(":")[0]
-            group_name = column.split(":")[2]
-
-            new_key = "{}:{}".format(attribute, group_name)
-            new_G.nodes[node][new_key] = G.nodes[node][column]
-
-            # Merging everything together
-            gnps_key = "ATTRIBUTE_ALL:{}:{}".format(attribute, group_name)
-            new_G.nodes[node][gnps_key] = G.nodes[node][column]
+            if column.upper().startswith("ATTRIBUTE"):
+                new_key = column.upper()
+            else:
+                new_key = "ATTRIBUTE_GNPS:{}".format(column.replace("GNPSGROUP:", ""))
+            new_G.nodes[node][new_key] = float(G.nodes[node][column])
 
         # Fixing node attributes
-        new_G.nodes[node]["mz"] = G.nodes[node]["parent mass"]
-        new_G.nodes[node]["rt"] = G.nodes[node]["RTMean"]
-        new_G.nodes[node]["rt_min"] = G.nodes[node]["RTMean"]
+        new_G.nodes[node]["mz"] = float("{:.4f}".format(float(G.nodes[node]["parent mass"])))
+        new_G.nodes[node]["rt"] = float("{:.2f}".format(float(G.nodes[node]["RTMean"])))
+        new_G.nodes[node]["rt_min"] = float("{:.2f}".format(float(G.nodes[node]["RTMean"])))
         new_G.nodes[node]["charge"] = G.nodes[node]["charge"]
         new_G.nodes[node]["component"] = G.nodes[node]["component"]
 

@@ -104,10 +104,36 @@ def main():
     cmd = "{} --outfile {} --out-summary-file {}".format(path_to_clusterinfo, clusterinfo_file, clustersummary_file)
     os.system(cmd)
 
-    # TODO: rewrite output to only include the cluster summary that have size greater than the parameter
+    # Loading data to be refined
     cluster_summary_df = pd.read_csv(clustersummary_file, sep="\t")
+    clusterinfo_df = pd.read_csv(clusterinfo_file, sep="\t")
+
+    # rewrite output to only include the cluster summary that have size greater than the parameter
     cluster_summary_df = cluster_summary_df[cluster_summary_df["number of spectra"] >= int(args.min_cluster_size)]
+    included_clusters_set = set(cluster_summary_df["cluster index"].tolist())
+
+    # Selecting only the clusters in the summary file
+    clusterinfo_df = clusterinfo_df[clusterinfo_df["#ClusterIdx"].isin(included_clusters_set)]
+
+    # Reading the cluster info file and figuring out the mean RT
+    clusterinfo_df = clusterinfo_df[["#ClusterIdx", "#RetTime"]]
+    clusterinfo_df = clusterinfo_df.rename(columns={"#ClusterIdx": "cluster index", "#RetTime": "retention time"})
+    
+    # Make sure RT is in minutes
+    clusterinfo_df["retention time"] = clusterinfo_df["retention time"] / 60.0
+
+    clusters_mean_df = clusterinfo_df.groupby("cluster index").mean()
+    clusters_mean_df = clusters_mean_df.reset_index()
+    # rename to RTMean
+    clusters_mean_df = clusters_mean_df.rename(columns={"retention time": "RTMean"})
+
+    # Merging this into the clustersummary
+    cluster_summary_df = cluster_summary_df.merge(clusters_mean_df, on="cluster index", how="left")
+
+    # Outputting again to be used downstream
     cluster_summary_df.to_csv(clustersummary_file, sep="\t", index=False)
+
+    
 
     # Do clean up out output spectra folder
     all_pklbin_files = glob.glob(os.path.join(args.output_spectra_folder, "specs_ms_*.pklbin"))
