@@ -72,7 +72,8 @@ def match_usi_to_redu_metadata(usi_list, redu_df):
     
     # TODO: make sure appropriate columns have attribute in redu metdata
     all_columns = list(merged_df.columns)
-    redu_columns = ["SampleType"]
+    # Include these columns SampleType SampleTypeSub1 NCBITaxonomy YearOfAnalysis SampleCollectionMethod   SampleExtractionMethod   MassSpectrometer  IonizationSourceAndPolarity    ChromatographyAndPhase  BiologicalSex  UBERONBodyPartName    HealthStatus   DOIDCommonName  Country  HumanPopulationDensity 
+    redu_columns = ["SampleType", "SampleTypeSub1", "NCBITaxonomy", "YearOfAnalysis", "SampleCollectionMethod", "SampleExtractionMethod", "MassSpectrometer", "IonizationSourceAndPolarity", "ChromatographyAndPhase", "BiologicalSex", "UBERONBodyPartName", "HealthStatus", "DOIDCommonName", "Country", "HumanPopulationDensity"]
 
     for column in all_columns:
         if column in redu_columns:
