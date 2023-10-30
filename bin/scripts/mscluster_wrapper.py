@@ -116,13 +116,13 @@ def main():
     clusterinfo_df = clusterinfo_df[clusterinfo_df["#ClusterIdx"].isin(included_clusters_set)]
 
     # Reading the cluster info file and figuring out the mean RT
-    clusterinfo_df = clusterinfo_df[["#ClusterIdx", "#RetTime"]]
-    clusterinfo_df = clusterinfo_df.rename(columns={"#ClusterIdx": "cluster index", "#RetTime": "retention time"})
+    clusterinfo_filtered_df = clusterinfo_df[["#ClusterIdx", "#RetTime"]]
+    clusterinfo_filtered_df = clusterinfo_filtered_df.rename(columns={"#ClusterIdx": "cluster index", "#RetTime": "retention time"})
     
     # Make sure RT is in minutes
-    clusterinfo_df["retention time"] = clusterinfo_df["retention time"] / 60.0
+    clusterinfo_filtered_df["retention time"] = clusterinfo_filtered_df["retention time"] / 60.0
 
-    clusters_mean_df = clusterinfo_df.groupby("cluster index").mean()
+    clusters_mean_df = clusterinfo_filtered_df.groupby("cluster index").mean()
     clusters_mean_df = clusters_mean_df.reset_index()
     # rename to RTMean
     clusters_mean_df = clusters_mean_df.rename(columns={"retention time": "RTMean"})
@@ -133,7 +133,9 @@ def main():
     # Outputting again to be used downstream
     cluster_summary_df.to_csv(clustersummary_file, sep="\t", index=False)
 
-    
+    # Outputting clusterinfo file
+    clusterinfo_df["#RetTime"] = clusterinfo_df["#RetTime"] / 60.0
+    clusterinfo_df.to_csv(clusterinfo_file, sep="\t", index=False)
 
     # Do clean up out output spectra folder
     all_pklbin_files = glob.glob(os.path.join(args.output_spectra_folder, "specs_ms_*.pklbin"))
