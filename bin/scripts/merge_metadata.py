@@ -17,6 +17,7 @@ def _load_metadata(input_filename):
 
     # Lets make sure the filename is good
     input_df["filename"] = input_df["filename"].apply(lambda x: os.path.basename(x))
+    input_df = input_df[input_df['filename'].notna() & input_df['filename'].ne('')]
 
     return input_df
 
@@ -44,36 +45,27 @@ def get_redu_metadata():
 
 def match_usi_to_redu_metadata(usi_list, redu_df):
     usi_df = pd.DataFrame({"usi": usi_list})
-    usi_df["filename"] = usi_df["usi"].apply(lambda x: x.split(":")[2])
-    usi_df["basename"] = usi_df["filename"].apply(lambda x: os.path.basename(x))
-    usi_df["ATTRIBUTE_DatasetAccession"] = usi_df["usi"].apply(lambda x: x.split(":")[1])
-    usi_df["merge_column"] = usi_df["ATTRIBUTE_DatasetAccession"] + ":" + usi_df["basename"]
+    # usi_df["filename"] = usi_df["usi"].apply(lambda x: x.split(":")[2])
+    # usi_df["basename"] = usi_df["filename"].apply(lambda x: os.path.basename(x))
+    # usi_df["ATTRIBUTE_DatasetAccession"] = usi_df["usi"].apply(lambda x: x.split(":")[1])
+    # usi_df["merge_column"] = usi_df["ATTRIBUTE_DatasetAccession"] + ":" + usi_df["basename"]
 
-    redu_df["basename"] = redu_df["filename"].apply(lambda x: os.path.basename(x))
-    redu_df["merge_column"] = redu_df["ATTRIBUTE_DatasetAccession"] + ":" + redu_df["basename"]
+    if not 'usi' in list(redu_df.columns):
+        redu_df['usi'] = redu_df['filename']
+        redu_df['usi'] = redu_df['usi'].str[2:]
+        redu_df['usi'] = 'mzspec:' + redu_df['usi']
+        redu_df['usi'] = redu_df['usi'].apply(lambda x: x.replace('/', ':', 1))
 
-    merged_df = pd.merge(usi_df, redu_df, on="merge_column", how="left")
+    merged_df = pd.merge(usi_df, redu_df, on="usi", how="left")
 
-    # we should cleanup filenames
-    try:
-        merged_df["filename"] = merged_df["filename_x"]
-
-        # lets drop filename_x and filename_y
-        merged_df = merged_df.drop(columns=["filename_x", "filename_y"])
-    except:
-        pass
-    
-    # Clean up accession
-    try:
-        merged_df["ATTRIBUTE_DatasetAccession"] = merged_df["ATTRIBUTE_DatasetAccession_x"]
-        merged_df = merged_df.drop(columns=["ATTRIBUTE_DatasetAccession_x", "ATTRIBUTE_DatasetAccession_y"])
-    except:
-        pass
-    
+    #merged_df["filename"] = merged_df["usi"].apply(lambda x: os.path.basename(x))
+    merged_df.loc[merged_df['filename'].isna() | merged_df['filename'].eq(''), 'filename'] = merged_df['usi'].apply(lambda x: x.split(":")[2])
+    merged_df["filename"] = merged_df['usi'].apply(lambda x: x.split(":")[2])
+        
     # TODO: make sure appropriate columns have attribute in redu metdata
     all_columns = list(merged_df.columns)
     # Include these columns SampleType SampleTypeSub1 NCBITaxonomy YearOfAnalysis SampleCollectionMethod   SampleExtractionMethod   MassSpectrometer  IonizationSourceAndPolarity    ChromatographyAndPhase  BiologicalSex  UBERONBodyPartName    HealthStatus   DOIDCommonName  Country  HumanPopulationDensity 
-    redu_columns = ["SampleType", "SampleTypeSub1", "NCBITaxonomy", "YearOfAnalysis", "SampleCollectionMethod", "SampleExtractionMethod", "MassSpectrometer", "IonizationSourceAndPolarity", "ChromatographyAndPhase", "BiologicalSex", "UBERONBodyPartName", "HealthStatus", "DOIDCommonName", "Country", "HumanPopulationDensity"]
+    redu_columns = ["SampleType", "SampleTypeSub1", "NCBITaxonomy", "YearOfAnalysis", "SampleCollectionMethod", "SampleExtractionMethod", "MassSpectrometer", "IonizationSourceAndPolarity", "ChromatographyAndPhase", "BiologicalSex", "UBERONBodyPartName", "HealthStatus", "DOIDCommonName", "Country", "HumanPopulationDensity", "Data Source"]
 
     for column in all_columns:
         if column in redu_columns:
@@ -111,9 +103,12 @@ def main():
         # We'll match up the data from the dataset accession and the filename
         merged_df = match_usi_to_redu_metadata(usi_list, redu_df)
 
+
+
         # Merging the metadata with the input
         if "filename" in input_metadata:
-            input_metadata = pd.merge(input_metadata, merged_df, on="filename", how="left")
+            #input_metadata = pd.merge(input_metadata, merged_df, on="filename", how="outer")
+            input_metadata = pd.concat([input_metadata, merged_df], ignore_index=True)
         else:
             input_metadata = merged_df
 
