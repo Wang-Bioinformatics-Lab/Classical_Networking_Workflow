@@ -211,6 +211,34 @@ def calculate_groups_metadata(clustersummary_df, clusterinfo_df, metadata_df):
     return pd.DataFrame(cluster_summary_list)
 
 
+def calculate_attribute_metadata(clustersummary_df, metadata_df):
+    # Getting the attributes
+    all_attributes, all_attribute_groups = create_attribute_group_list(metadata_df)
+
+    cluster_summary_list = clustersummary_df.to_dict(orient="records")
+
+    for cluster in tqdm(cluster_summary_list):
+        # filter for the grouped list
+        cluster_index = cluster["cluster index"]
+
+        for attribute in all_attributes:
+            # Finding all groups in the attribute via list comprehension
+            current_attribute_groups = [x for x in all_attribute_groups if x["attribute"] == attribute]
+
+            positive_groups = []
+
+            for attribute_group in current_attribute_groups:
+                group_column = "{}:GNPSGROUP:{}".format(attribute_group["attribute"], attribute_group["group"])
+                if cluster[group_column] > 0:
+                    positive_groups.append(attribute_group["group"])
+
+            # Converting to string
+            positive_groups = [str(x) for x in positive_groups]
+
+            cluster[attribute] = ",".join(positive_groups)
+
+    return pd.DataFrame(cluster_summary_list)
+
 
 
 def main():
@@ -234,6 +262,9 @@ def main():
         # Enriching metadata group counts
         clustersummary_df = calculate_groups_metadata(clustersummary_df, clustersinfo_df, metadata_df)
 
+        # Now we will write out the attribute column
+        clustersummary_df = calculate_attribute_metadata(clustersummary_df, metadata_df)
+
     # Writing out the file
     clustersummary_df.to_csv(args.output_clusterinfosummary_filename, sep="\t", index=False)
 
@@ -248,8 +279,6 @@ def main():
     print("Loaded Cluster Summary")
 
     attribute_to_groups = load_attribute_mapping(args.input_attribute_mapping_filename)
-
-    CLUSTER_MIN_SIZE = int(2)
 
     #Calculating the spectrum counts per group
     cluster_to_group_counts = defaultdict(lambda: defaultdict(lambda: 0))
