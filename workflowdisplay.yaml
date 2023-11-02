@@ -162,6 +162,16 @@ Views:
             -   usi:mzdata:OMETATASK-[task]:nf_output/networking/network.graphml
             -   usi-mgf:mzdata:OMETATASK-[task]:nf_output/clustering/specs_ms.mgf
 
+-   name: Visualize Network w/ Singletons in Browser
+    displayname: Visualize Full Network w/ Singletons in Browser
+    viewname: visualizefullsingletonnetwork
+    displaytype: linkout
+    parameters:
+        baseurl: /dashboards/networkviewer
+        urlparam:
+            -   usi:mzdata:OMETATASK-[task]:nf_output/networking/network_singletons.graphml
+            -   usi-mgf:mzdata:OMETATASK-[task]:nf_output/clustering/specs_ms.mgf
+
 -   name: Export Network in Cytoscape
     displayname: Export Network in Cytoscape
     viewname: visualizecytoscape
