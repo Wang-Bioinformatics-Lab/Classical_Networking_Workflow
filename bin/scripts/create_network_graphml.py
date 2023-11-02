@@ -29,7 +29,11 @@ def convert_network(G):
                 new_key = column.upper()
             else:
                 new_key = "ATTRIBUTE_GNPS:{}".format(column.replace("GNPSGROUP:", ""))
-            new_G.nodes[node][new_key] = float(G.nodes[node][column])
+            
+            try:
+                new_G.nodes[node][new_key] = float(G.nodes[node][column])
+            except:
+                new_G.nodes[node][new_key] = G.nodes[node][column]
 
         # Fixing node attributes
         new_G.nodes[node]["mz"] = float("{:.4f}".format(float(G.nodes[node]["parent mass"])))
@@ -39,7 +43,6 @@ def convert_network(G):
         new_G.nodes[node]["component"] = G.nodes[node]["component"]
 
         node_to_component[node] = G.nodes[node]["component"]
-        
         
         if "Compound_Name" in G.nodes[node]:
             new_G.nodes[node]["library_compound_name"] = G.nodes[node]["Compound_Name"]
