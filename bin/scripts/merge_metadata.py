@@ -103,6 +103,8 @@ def main():
         # We'll match up the data from the dataset accession and the filename
         merged_df = match_usi_to_redu_metadata(usi_list, redu_df)
 
+
+
         # Merging the metadata with the input
         if "filename" in input_metadata:
             #input_metadata = pd.merge(input_metadata, merged_df, on="filename", how="left")
