@@ -18,6 +18,12 @@ def convert_network(G):
     group_columns = G.nodes[all_nodes[0]].keys()
     group_columns = [key for key in group_columns if "GNPSGROUP" in key]
 
+    attribute_columns = G.nodes[all_nodes[0]].keys()
+    attribute_columns = [key for key in attribute_columns if "ATTRIBUTE_" in key]
+    attribute_columns = [key for key in attribute_columns if "GNPSGROUP" not in key]
+
+    print("ZZZZ", attribute_columns)
+
     node_to_component = {}
 
     for node in all_nodes:
@@ -34,6 +40,9 @@ def convert_network(G):
                 new_G.nodes[node][new_key] = float(G.nodes[node][column])
             except:
                 new_G.nodes[node][new_key] = G.nodes[node][column]
+
+        for attribute in attribute_columns:
+            new_G.nodes[node][attribute] = G.nodes[node][attribute]
 
         # Fixing node attributes
         new_G.nodes[node]["mz"] = float("{:.4f}".format(float(G.nodes[node]["parent mass"])))
