@@ -200,6 +200,13 @@ Views:
     parameters:
         filename: nf_output/networking/network.graphml
 
+-   name: Download Network with Singletons GraphML
+    displayname: Download Network with Singletons GraphML
+    viewname: graphmlsingletons
+    displaytype: download
+    parameters:
+        filename: nf_output/networking/network_singletons.graphml
+
 -   name: Download Consensus MS/MS MGF
     displayname: Download Consensus MS/MS MGF
     viewname: specms
