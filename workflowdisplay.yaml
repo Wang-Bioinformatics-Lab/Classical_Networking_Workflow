@@ -181,6 +181,16 @@ Views:
         urlparam:
             -   task:[task]
 
+-   name: Export Network in Cytoscape with Singletons
+    displayname: Export Network in Cytoscape with Singletons
+    viewname: visualizecytoscapesingleton
+    displaytype: linkout
+    parameters:
+        baseurl: https://cytoscape.gnps2.org/process
+        urlparam:
+            -   task:[task]
+            -   override_path:nf_output/networking/network_singletons.graphml
+
 -   name: section
     displayname: Downstream Analysis
     viewname: section
@@ -199,6 +209,13 @@ Views:
     displaytype: download
     parameters:
         filename: nf_output/networking/network.graphml
+
+-   name: Download Network with Singletons GraphML
+    displayname: Download Network with Singletons GraphML
+    viewname: graphmlsingletons
+    displaytype: download
+    parameters:
+        filename: nf_output/networking/network_singletons.graphml
 
 -   name: Download Consensus MS/MS MGF
     displayname: Download Consensus MS/MS MGF
