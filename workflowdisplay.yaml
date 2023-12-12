@@ -61,7 +61,7 @@ Views:
 -   name: Library Match Results
     displayname: Library Match Results
     viewname: librarymatches
-    displaytype: datatable_serverbig
+    displaytype: datatable_serverbig #datatable
     parameters:
         filename: nf_output/library/merged_results_with_gnps.tsv
         columns:
@@ -81,6 +81,8 @@ Views:
                 data: SharedPeaks
             -   title: "MassDiff"
                 data: MassDiff
+            -   title: "Adduct"
+                data: Adduct
             -   title: "SpectrumID"
                 data: SpectrumID
         columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
