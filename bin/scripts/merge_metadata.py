@@ -54,7 +54,6 @@ def match_usi_to_redu_metadata(usi_list, redu_df):
 
     merged_df = pd.merge(usi_df, redu_df, on="usi", how="left")
 
-    #merged_df["filename"] = merged_df["usi"].apply(lambda x: os.path.basename(x))
     merged_df.loc[merged_df['filename'].isna() | merged_df['filename'].eq(''), 'filename'] = merged_df['usi'].apply(lambda x: x.split(":")[2])
     merged_df["filename"] = merged_df['usi'].apply(lambda x: x.split(":")[2])
         
@@ -103,7 +102,7 @@ def main():
 
         # Merging the metadata with the input
         if "filename" in input_metadata:
-            #input_metadata = pd.merge(input_metadata, merged_df, on="filename", how="left")
+            
             if "ATTRIBUTE_DataSource" in merged_df:
                 input_metadata["ATTRIBUTE_DataSource"] = 'user input data'
             input_metadata = pd.concat([input_metadata, merged_df], ignore_index=True)
