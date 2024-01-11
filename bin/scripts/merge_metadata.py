@@ -45,10 +45,6 @@ def get_redu_metadata():
 
 def match_usi_to_redu_metadata(usi_list, redu_df):
     usi_df = pd.DataFrame({"usi": usi_list})
-    # usi_df["filename"] = usi_df["usi"].apply(lambda x: x.split(":")[2])
-    # usi_df["basename"] = usi_df["filename"].apply(lambda x: os.path.basename(x))
-    # usi_df["ATTRIBUTE_DatasetAccession"] = usi_df["usi"].apply(lambda x: x.split(":")[1])
-    # usi_df["merge_column"] = usi_df["ATTRIBUTE_DatasetAccession"] + ":" + usi_df["basename"]
 
     if not 'usi' in list(redu_df.columns):
         redu_df['usi'] = redu_df['filename']
