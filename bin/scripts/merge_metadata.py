@@ -98,11 +98,8 @@ def main():
         # We'll match up the data from the dataset accession and the filename
         merged_df = match_usi_to_redu_metadata(usi_list, redu_df)
 
-
-
         # Merging the metadata with the input
         if "filename" in input_metadata:
-            
             if "ATTRIBUTE_DataSource" in merged_df:
                 input_metadata["ATTRIBUTE_DataSource"] = 'user input data'
             input_metadata = pd.concat([input_metadata, merged_df], ignore_index=True)
