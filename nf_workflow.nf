@@ -178,7 +178,8 @@ process librarymergeResults {
 process librarygetGNPSAnnotations {
     publishDir "./nf_output/library", mode: 'copy'
 
-    cache 'lenient'
+    //cache 'lenient'
+    cache 'false'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -190,7 +191,7 @@ process librarygetGNPSAnnotations {
     path 'merged_results_with_gnps.tsv'
 
     """
-    python $TOOL_FOLDER/getGNPS_library_annotations.py \
+    python $TOOL_FOLDER/scripts/getGNPS_library_annotations.py \
     merged_results.tsv \
     merged_results_with_gnps.tsv \
     --librarysummary library_summary.tsv
@@ -449,7 +450,7 @@ process summaryLibrary {
     path '*.tsv'
 
     """
-    python $TOOL_FOLDER/library_summary.py \
+    python $TOOL_FOLDER/scripts/library_summary.py \
     $library_file \
     ${library_file}.tsv
     """
@@ -490,7 +491,7 @@ workflow {
     library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", keepHeader: true)
 
 
-    gnps_library_results_ch = librarygetGNPSAnnotations(merged_results, library_summary_merged_ch)
+    gnps_library_results_ch = librarygetGNPSAnnotations(merged_results_ch, library_summary_merged_ch)
 
     // Networking
     params_ch = networkingGNPSPrepParams(clustered_spectra_ch)
