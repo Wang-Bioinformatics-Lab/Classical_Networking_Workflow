@@ -109,9 +109,11 @@ def _enrich_librarysummary_annotations(output_result_dict, library_dict=None):
         output_result_dict["Compound_Name"] = (library_spectrum["compound_name"].replace("\t", ""))
         output_result_dict["Ion_Source"] = (library_spectrum["ion_source"].replace("\t", ""))
         output_result_dict["Instrument"] = (library_spectrum["instrument"].replace("\t", ""))
+        output_result_dict["LibMZ"] = (library_spectrum["precursormz"])
         output_result_dict["Adduct"] = (library_spectrum["adduct"].replace("\t", ""))
         output_result_dict["Charge"] = (library_spectrum["charge"].replace("\t", ""))
         output_result_dict["Smiles"] = (str(library_spectrum["smiles"])).replace("\t", "")
+        
         output_result_dict["INCHI"] = "" # TODO: We should actually convert but we don't have this information now
         output_result_dict["INCHI_AUX"] = "" # TODO: We should actually convert but we don't have this information now
         output_result_dict["Library_Class"] = ""
@@ -124,8 +126,6 @@ def _enrich_librarysummary_annotations(output_result_dict, library_dict=None):
         output_result_dict["Pubmed_ID"] = ""
         output_result_dict["Organism"] = ""
         output_result_dict["Compound_Source"] = ""
-        output_result_dict["LibMZ"] = 0
-
 
         #output_result_dict["IonMode"] = (library_spectrum["ion_mode"].replace("\t", ""))
 

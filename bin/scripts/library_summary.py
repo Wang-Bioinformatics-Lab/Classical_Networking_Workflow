@@ -25,6 +25,10 @@ def main():
             ion_source = spectrum['params'].get('ion_source', "")
             charge = spectrum['params'].get('charge', 0)
             adduct = spectrum['params'].get('adduct', "NA")
+            try:
+                precursormz = spectrum['params'].get('pepmass', [0])[0]
+            except:
+                precursormz = 0
 
             output_dictionary = {}
             output_dictionary["spectrum_id"] = spectrum_id
@@ -35,6 +39,7 @@ def main():
             output_dictionary["ion_source"] = ion_source
             output_dictionary["charge"] = charge
             output_dictionary["adduct"] = adduct
+            output_dictionary["precursormz"] = precursormz
             
             output_list.append(output_dictionary)
 
