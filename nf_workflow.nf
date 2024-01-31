@@ -413,24 +413,22 @@ process createNetworkGraphML {
 
 // downloading all the files
 process prepInputFiles {
-    publishDir "$params.input_spectra", mode: 'copyNoFollow' // Warning, this is kind of a hack, it'll copy files back to the input folder
+    //publishDir "$params.input_spectra", mode: 'copyNoFollow' // Warning, this is kind of a hack, it'll copy files back to the input folder
     
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
     file input_parameters
     file cache_directory
+    file input_spectra_folder
 
     output:
     val true
-    file "*.mzML" optional true
-    file "*.mzXML" optional true
-    file "*.mgf" optional true 
 
     """
     python $TOOL_FOLDER/scripts/download_public_data_usi.py \
     $input_parameters \
-    . \
+    $input_spectra_folder \
     output_summary.tsv \
     --cache_directory $cache_directory
     """
@@ -462,7 +460,7 @@ workflow {
 
     // Downloads input data
     usi_download_ch = Channel.fromPath(params.download_usi_filename)
-    (_download_ready, _, _, _) = prepInputFiles(usi_download_ch, Channel.fromPath(params.cache_directory))
+    (_download_ready) = prepInputFiles(usi_download_ch, Channel.fromPath(params.cache_directory), input_spectra_ch)
 
     // File summaries
     filesummary(input_spectra_ch, _download_ready)
