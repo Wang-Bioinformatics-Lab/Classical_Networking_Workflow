@@ -15,6 +15,9 @@ def _load_metadata(input_filename):
     else:
         input_df = pd.read_csv(input_filename, sep=None)
 
+    # Removing rows where nan is in the filename
+    input_df = input_df.dropna(subset=["filename"])
+
     # Lets make sure the filename is good
     input_df["filename"] = input_df["filename"].apply(lambda x: os.path.basename(x))
 
