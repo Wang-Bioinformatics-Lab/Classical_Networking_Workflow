@@ -488,8 +488,8 @@ workflow {
     // Merging all these tsv files from library_summary_ch within nextflow
     library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", keepHeader: true)
 
-
     gnps_library_results_ch = librarygetGNPSAnnotations(merged_results_ch, library_summary_merged_ch)
+    gnps_library_results_ch = gnps_library_results_ch.ifEmpty(file("NO_FILE"))
 
     // Networking
     params_ch = networkingGNPSPrepParams(clustered_spectra_ch)

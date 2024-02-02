@@ -23,6 +23,18 @@ def _load_metadata(input_filename):
 
     return input_df
 
+def _filter_metadata(input_df, filelist):
+    # Making sure is basename
+    filelist = set([os.path.basename(x) for x in filelist])
+
+    # Making sure filename is basename
+    input_df["filename"] = input_df["filename"].apply(lambda x: os.path.basename(x))
+
+    # Filtering the metadata
+    input_df = input_df[input_df["filename"].isin(filelist)]
+
+    return input_df
+
 def load_usi_list(input_filename):
     # Checking the file extension
     if input_filename.endswith(".yaml"):
@@ -98,6 +110,23 @@ def main():
 
     args = parser.parse_args()
 
+
+    # Getting all the input files is available
+    all_input_files = None
+
+    if args.spectra_folder is not None:
+        all_input_files = []
+        
+        all_input_files += glob.glob(args.spectra_folder + "/*.mzML")
+        all_input_files += glob.glob(args.spectra_folder + "/*.mzml")
+        all_input_files += glob.glob(args.spectra_folder + "/*.mzXML")
+        all_input_files += glob.glob(args.spectra_folder + "/*.mzxml")
+        all_input_files += glob.glob(args.spectra_folder + "/*.mgf")
+        all_input_files += glob.glob(args.spectra_folder + "/*.MGF")
+
+        # getting basename for all input files
+        all_input_files = [os.path.basename(x) for x in all_input_files]
+
     if not os.path.exists(args.input_metadata):
         # This is likely not valid, lets skip it
         input_metadata = pd.DataFrame()
@@ -122,19 +151,7 @@ def main():
 
     # If we want per file grouping
     if args.per_file_grouping == "Yes":
-        all_input_files = []
-        
-        all_input_files += glob.glob(args.spectra_folder + "/*.mzML")
-        all_input_files += glob.glob(args.spectra_folder + "/*.mzml")
-        all_input_files += glob.glob(args.spectra_folder + "/*.mzXML")
-        all_input_files += glob.glob(args.spectra_folder + "/*.mzxml")
-        all_input_files += glob.glob(args.spectra_folder + "/*.mgf")
-        all_input_files += glob.glob(args.spectra_folder + "/*.MGF")
-
         new_metadata = pd.DataFrame()
-
-        # getting basename for all input files
-        all_input_files = [os.path.basename(x) for x in all_input_files]
 
         new_metadata["filename"] = all_input_files
         new_metadata["ATTRIBUTE_PerFileGrouping"] = new_metadata["filename"]
@@ -144,6 +161,12 @@ def main():
             input_metadata = pd.merge(input_metadata, new_metadata, on="filename", how="left")
         else:
             input_metadata = new_metadata
+
+    # Filtering the output metadata
+    try:
+        input_metadata = _filter_metadata(input_metadata, all_input_files)
+    except:
+        pass
 
     # outputing metadata
     input_metadata.to_csv(args.merged_metadata, sep="\t", index=False)
