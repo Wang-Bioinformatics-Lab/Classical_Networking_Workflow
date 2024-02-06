@@ -445,7 +445,7 @@ process summaryLibrary {
     path library_file
 
     output:
-    path '${library_file}.tsv' optional true
+    path '*.tsv' optional true
 
     """
     python $TOOL_FOLDER/scripts/library_summary.py \
