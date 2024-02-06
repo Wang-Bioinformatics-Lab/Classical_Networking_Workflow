@@ -445,7 +445,7 @@ process summaryLibrary {
     path library_file
 
     output:
-    path '*.tsv'
+    path '${library_file}.tsv' optional true
 
     """
     python $TOOL_FOLDER/scripts/library_summary.py \
@@ -487,6 +487,7 @@ workflow {
 
     // Merging all these tsv files from library_summary_ch within nextflow
     library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", keepHeader: true)
+    library_summary_merged_ch = library_summary_merged_ch.ifEmpty(file("NO_FILE"))
 
     gnps_library_results_ch = librarygetGNPSAnnotations(merged_results_ch, library_summary_merged_ch)
     gnps_library_results_ch = gnps_library_results_ch.ifEmpty(file("NO_FILE"))

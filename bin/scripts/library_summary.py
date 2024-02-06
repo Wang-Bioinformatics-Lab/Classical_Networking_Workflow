@@ -44,8 +44,9 @@ def main():
             output_list.append(output_dictionary)
 
     # creating an output df
-    output_df = pd.DataFrame(output_list)
-    output_df.to_csv(args.output_summary, sep="\t", index=False)
+    if len(output_list) > 0:
+        output_df = pd.DataFrame(output_list)
+        output_df.to_csv(args.output_summary, sep="\t", index=False)
 
 if __name__ == "__main__":
     main()

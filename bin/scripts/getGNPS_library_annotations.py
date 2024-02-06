@@ -226,10 +226,12 @@ def _enrich_annotations(output_result_dict):
     return output_result_dict
 
 def enrich_output(input_filename, output_filename, topk=None, library_summary_df=None):
+    library_dict = {}
     if library_summary_df is not None:
-        library_dict = _prep_library_dict(library_summary_df)
-
-    # molecule_explorer_df = pd.DataFrame(ming_gnps_library.get_molecule_explorer_dataset_data())
+        try:
+            library_dict = _prep_library_dict(library_summary_df)
+        except:
+            pass
 
     if not os.path.exists(input_filename):
         open(output_filename, "w").close()
