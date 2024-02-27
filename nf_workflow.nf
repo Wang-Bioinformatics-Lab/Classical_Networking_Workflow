@@ -411,6 +411,30 @@ process createNetworkGraphML {
     """
 }
 
+process splitNetworkComponents {
+    publishDir "./nf_output/networking", mode: 'copy'
+
+    errorStrategy 'ignore'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file input_graphml
+
+    output:
+    file "components"
+
+    """
+    mkdir components
+
+    python $TOOL_FOLDER/scripts/split_network_graphml.py \
+    $input_graphml \
+    component_summary.tsv \
+    components
+    """
+
+}
+
 // downloading all the files
 process prepInputFiles {
     //publishDir "$params.input_spectra", mode: 'copyNoFollow' // Warning, this is kind of a hack, it'll copy files back to the input folder
@@ -533,6 +557,9 @@ workflow {
     clustersummary_with_network_ch = enrichClusterSummary(clustersummary_with_groups_ch, filtered_networking_pairs_enriched_ch, gnps_library_results_ch)
 
     // Creating the graphml Network
-    createNetworkGraphML(clustersummary_with_network_ch, filtered_networking_pairs_enriched_ch, gnps_library_results_ch)
+    (network_graphml_ch, network_graphml_singleton_ch) = createNetworkGraphML(clustersummary_with_network_ch, filtered_networking_pairs_enriched_ch, gnps_library_results_ch)
+
+    // Splitting the components
+    splitNetworkComponents(network_graphml_ch)
 
 }
