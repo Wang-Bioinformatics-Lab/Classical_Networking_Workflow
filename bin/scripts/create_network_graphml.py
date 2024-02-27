@@ -1,1 +1,1 @@
-../../GNPS_sharedcode/scripts/create_network_graphml.py
+../../GNPS_sharedcode/create_network_graphml.py
