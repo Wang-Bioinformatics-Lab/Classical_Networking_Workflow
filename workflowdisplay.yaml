@@ -96,9 +96,6 @@ Views:
             <img src="https://structure.gnps2.org/structureimg?smiles=${row["Smiles"]}"/>
         `;}},]'
 
-
-
-
 -   name: Network Components List
     displayname: Network Components List
     viewname: networkcomponents
