@@ -423,6 +423,7 @@ process splitNetworkComponents {
 
     output:
     file "components"
+    file "component_summary.tsv"
 
     """
     mkdir components

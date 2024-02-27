@@ -96,6 +96,29 @@ Views:
             <img src="https://structure.gnps2.org/structureimg?smiles=${row["Smiles"]}"/>
         `;}},]'
 
+
+
+
+-   name: Network Components List
+    displayname: Network Components List
+    viewname: networkcomponents
+    displaytype: datatable_serverbig
+    parameters:
+        filename: nf_output/networking/component_summary.tsv
+        columns:
+            -   title: "View"
+                data: 
+            -   title: "Component Number"
+                data: "component_id"
+            -   title: "Number of Nodes"
+                data: "number_of_nodes"
+            -   title: "Number of Edges"
+                data: "number_of_edges"
+        columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
+        return `
+            <a target="_blank" href="/dashboards/networkviewer?usi=mzdata:OMETATASK-${task}:nf_output/networking/components/component_${row["component_id"]}.graphml&usi-mgf=mzdata:OMETATASK-${task}:nf_output/clustering/specs_ms.mgf">View Component</a>
+        `;}},]'
+
 -   name: Raw Spectra List
     displayname: Raw Spectra List
     viewname: rawspectra
