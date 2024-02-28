@@ -61,7 +61,7 @@ Views:
 -   name: Library Match Results
     displayname: Library Match Results
     viewname: librarymatches
-    displaytype: datatable_serverbig #datatable
+    displaytype: datatable #datatable
     parameters:
         filename: nf_output/library/merged_results_with_gnps.tsv
         columns:

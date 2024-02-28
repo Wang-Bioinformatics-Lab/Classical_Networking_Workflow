@@ -129,6 +129,11 @@ def _enrich_librarysummary_annotations(output_result_dict, library_dict=None):
 
         #output_result_dict["IonMode"] = (library_spectrum["ion_mode"].replace("\t", ""))
 
+        # checking all the values, and change to N/A if empty
+        for key in output_result_dict:
+            if output_result_dict[key] == "":
+                output_result_dict[key] = "N/A"
+
     return output_result_dict
 
 # Here we will enrich the smiles
