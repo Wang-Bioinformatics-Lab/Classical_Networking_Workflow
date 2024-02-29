@@ -238,6 +238,20 @@ Views:
             -   input_spectra:TASKLOCATION/[task]/nf_output/clustering/specs_ms.mgf
             -   description:Downstream from [task] Classical Molecular Networking
 
+-   name: Downstream Analysis - Overlay Custom Network
+    displayname: Downstream Analysis - Overlay Custom Network
+    viewname: downstreamoverlay
+    displaytype: linkout
+    parameters:
+        baseurl: /workflowinput
+        urlparam:
+            -   workflowname:gnps2_network_overlay_workflow
+        hashparam:
+            -   input_graphml:TASKLOCATION/[task]/nf_output/networking/network_singletons.graphml
+            -   input_mgf:TASKLOCATION/[task]/nf_output/clustering/specs_ms.mgf
+            -   description:Downstream from [task] Classical Molecular Networking
+
+
 -   name: section
     displayname: Download Network Files
     viewname: section
