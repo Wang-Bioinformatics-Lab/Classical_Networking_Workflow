@@ -316,31 +316,6 @@ process filterNetwork {
     """
 }
 
-process filterNetworkTransitive {
-    publishDir "./nf_output/networking", mode: 'copy'
-
-    conda "$TOOL_FOLDER/conda_env.yml"
-
-    cache false
-
-    input:
-    file input_pairs
-    file input_spectra
-
-    output:
-    file "filtered_pairs.tsv"
-
-    """
-    python $TOOL_FOLDER/scripts/transitive_alignment.py \
-    -c $input_spectra \
-    -m $input_pairs \
-    -p 30 \
-    -th $params.topology_cliquemincosine \
-    -r filtered_pairs.tsv \
-    --minimum_score $params.networking_min_cosine
-    """
-}
-
 // This takes the pairs and adds the component numbers to the table
 process enrichNetworkEdges {
     publishDir "./nf_output/networking", mode: 'copy'
@@ -524,12 +499,7 @@ workflow {
     merged_networking_pairs_ch = networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
 
     // Filtering the network
-    if(params.topology == "classic"){
-        filtered_networking_pairs_ch = filterNetwork(merged_networking_pairs_ch)
-    }
-    else if (params.topology == "transitive"){
-        filtered_networking_pairs_ch = filterNetworkTransitive(merged_networking_pairs_ch, clustered_spectra_ch)
-    }
+    filtered_networking_pairs_ch = filterNetwork(merged_networking_pairs_ch)
 
     filtered_networking_pairs_enriched_ch = enrichNetworkEdges(filtered_networking_pairs_ch, clustersummary_ch)
 
