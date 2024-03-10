@@ -62,10 +62,11 @@ params.OMETAPARAM_YAML = "job_parameters.yaml"
 params.download_usi_filename = params.OMETAPARAM_YAML // This can be changed if you want to run locally
 params.cache_directory = "data/cache"
 
+params.publishdir = "$baseDir"
 TOOL_FOLDER = "$baseDir/bin"
 
 process filesummary {
-    publishDir "./nf_output", mode: 'copy'
+    publishDir "$params.publishdir/nf_output", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -82,7 +83,7 @@ process filesummary {
 }
 
 process mscluster {
-    publishDir "./nf_output", mode: 'copy'
+    publishDir "$params.publishdir/nf_output", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -110,7 +111,7 @@ process mscluster {
 
 // TODO: Finish Implementing this, as this is currently an no-op
 process massqlFilterSpectra {
-    publishDir "./nf_output", mode: 'copy'
+    publishDir "$params.publishdir/nf_output", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env_massql.yml"
 
@@ -156,7 +157,7 @@ process librarySearchData {
 }
 
 process librarymergeResults {
-    publishDir "./nf_output/library_intermediate", mode: 'copy'
+    publishDir "$params.publishdir/library_intermediate", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -176,7 +177,7 @@ process librarymergeResults {
 }
 
 process librarygetGNPSAnnotations {
-    publishDir "./nf_output/library", mode: 'copy'
+    publishDir "$params.publishdir/library", mode: 'copy'
 
     //cache 'lenient'
     cache 'false'
@@ -200,7 +201,7 @@ process librarygetGNPSAnnotations {
 
 // Molecular Networking
 process networkingGNPSPrepParams {
-    publishDir "./nf_output/networking", mode: 'copy'
+    publishDir "$params.publishdir/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -225,7 +226,7 @@ process networkingGNPSPrepParams {
 }
 
 process calculatePairs {
-    publishDir "./nf_output/temp_pairs", mode: 'copy'
+    publishDir "$params.publishdir/temp_pairs", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -247,7 +248,7 @@ process calculatePairs {
 
 // Creating the metadata file
 process createMetadataFile {
-    publishDir "./nf_output/metadata", mode: 'copy'
+    publishDir "$params.publishdir/metadata", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -273,7 +274,7 @@ process createMetadataFile {
 
 // Calculating the groupings
 process calculateGroupings {
-    publishDir "./nf_output/networking", mode: 'copy'
+    publishDir "$params.publishdir/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -296,7 +297,7 @@ process calculateGroupings {
 
 // Filtering the network, this is the classic way
 process filterNetwork {
-    publishDir "./nf_output/networking", mode: 'copy'
+    publishDir "$params.publishdir/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -318,7 +319,7 @@ process filterNetwork {
 
 // This takes the pairs and adds the component numbers to the table
 process enrichNetworkEdges {
-    publishDir "./nf_output/networking", mode: 'copy'
+    publishDir "$params.publishdir/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -339,7 +340,7 @@ process enrichNetworkEdges {
 
 // Enriching the Cluster Summary
 process enrichClusterSummary {
-    publishDir "./nf_output/networking", mode: 'copy'
+    publishDir "$params.publishdir/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -361,7 +362,7 @@ process enrichClusterSummary {
 }
 
 process createNetworkGraphML {
-    publishDir "./nf_output/networking", mode: 'copy'
+    publishDir "$params.publishdir/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -387,7 +388,7 @@ process createNetworkGraphML {
 }
 
 process splitNetworkComponents {
-    publishDir "./nf_output/networking", mode: 'copy'
+    publishDir "$params.publishdir/networking", mode: 'copy'
 
     errorStrategy 'ignore'
 
@@ -435,7 +436,7 @@ process prepInputFiles {
 }
 
 process summaryLibrary {
-    publishDir "./nf_output", mode: 'copy'
+    publishDir "$params.publishdir/nf_output", mode: 'copy'
 
     cache 'lenient'
 
