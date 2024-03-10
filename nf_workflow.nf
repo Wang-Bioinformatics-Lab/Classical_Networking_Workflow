@@ -62,7 +62,6 @@ params.OMETAPARAM_YAML = "job_parameters.yaml"
 params.download_usi_filename = params.OMETAPARAM_YAML // This can be changed if you want to run locally
 params.cache_directory = "data/cache"
 
-params.publishdir = "$baseDir"
 TOOL_FOLDER = "$baseDir/bin"
 
 process filesummary {
@@ -157,7 +156,7 @@ process librarySearchData {
 }
 
 process librarymergeResults {
-    publishDir "$params.publishdir/library_intermediate", mode: 'copy'
+    publishDir "$params.publishdir/nf_output/library_intermediate", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -177,7 +176,7 @@ process librarymergeResults {
 }
 
 process librarygetGNPSAnnotations {
-    publishDir "$params.publishdir/library", mode: 'copy'
+    publishDir "$params.publishdir/nf_output/library", mode: 'copy'
 
     //cache 'lenient'
     cache 'false'
@@ -201,7 +200,7 @@ process librarygetGNPSAnnotations {
 
 // Molecular Networking
 process networkingGNPSPrepParams {
-    publishDir "$params.publishdir/networking", mode: 'copy'
+    publishDir "$params.publishdir/nf_output/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -226,7 +225,7 @@ process networkingGNPSPrepParams {
 }
 
 process calculatePairs {
-    publishDir "$params.publishdir/temp_pairs", mode: 'copy'
+    publishDir "$params.publishdir/nf_output/temp_pairs", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -248,7 +247,7 @@ process calculatePairs {
 
 // Creating the metadata file
 process createMetadataFile {
-    publishDir "$params.publishdir/metadata", mode: 'copy'
+    publishDir "$params.publishdir/nf_output/metadata", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -274,7 +273,7 @@ process createMetadataFile {
 
 // Calculating the groupings
 process calculateGroupings {
-    publishDir "$params.publishdir/networking", mode: 'copy'
+    publishDir "$params.publishdir/nf_output/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -297,7 +296,7 @@ process calculateGroupings {
 
 // Filtering the network, this is the classic way
 process filterNetwork {
-    publishDir "$params.publishdir/networking", mode: 'copy'
+    publishDir "$params.publishdir/nf_output/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -317,9 +316,34 @@ process filterNetwork {
     """
 }
 
+process filterNetworkTransitive {
+    publishDir "$params.publishdir/nf_output/networking", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    cache false
+
+    input:
+    file input_pairs
+    file input_spectra
+
+    output:
+    file "filtered_pairs.tsv"
+
+    """
+    python $TOOL_FOLDER/scripts/transitive_alignment.py \
+    -c $input_spectra \
+    -m $input_pairs \
+    -p 30 \
+    -th $params.topology_cliquemincosine \
+    -r filtered_pairs.tsv \
+    --minimum_score $params.networking_min_cosine
+    """
+}
+
 // This takes the pairs and adds the component numbers to the table
 process enrichNetworkEdges {
-    publishDir "$params.publishdir/networking", mode: 'copy'
+    publishDir "$params.publishdir/nf_output/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -340,7 +364,7 @@ process enrichNetworkEdges {
 
 // Enriching the Cluster Summary
 process enrichClusterSummary {
-    publishDir "$params.publishdir/networking", mode: 'copy'
+    publishDir "$params.publishdir/nf_output/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -362,7 +386,7 @@ process enrichClusterSummary {
 }
 
 process createNetworkGraphML {
-    publishDir "$params.publishdir/networking", mode: 'copy'
+    publishDir "$params.publishdir/nf_output/networking", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -388,7 +412,7 @@ process createNetworkGraphML {
 }
 
 process splitNetworkComponents {
-    publishDir "$params.publishdir/networking", mode: 'copy'
+    publishDir "$params.publishdir/nf_output/networking", mode: 'copy'
 
     errorStrategy 'ignore'
 
@@ -500,7 +524,12 @@ workflow {
     merged_networking_pairs_ch = networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
 
     // Filtering the network
-    filtered_networking_pairs_ch = filterNetwork(merged_networking_pairs_ch)
+    if(params.topology == "classic"){
+        filtered_networking_pairs_ch = filterNetwork(merged_networking_pairs_ch)
+    }
+    else if (params.topology == "transitive"){
+        filtered_networking_pairs_ch = filterNetworkTransitive(merged_networking_pairs_ch, clustered_spectra_ch)
+    }
 
     filtered_networking_pairs_enriched_ch = enrichNetworkEdges(filtered_networking_pairs_ch, clustersummary_ch)
 
