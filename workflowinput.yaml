@@ -1,7 +1,7 @@
 workflowname: classical_networking_workflow
 workflowdescription: This is Classical Molecular Networking for GNPS2
 workflowlongdescription: This is Classical Molecular Networking for GNPS2
-workflowversion: "0.5.8"
+workflowversion: "0.5.9"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -156,16 +156,6 @@ parameterlist:
     - displayname: Network Topology Parameters
       paramtype: section
 
-    - displayname: Topology Algorithm
-      paramtype: select
-      nf_paramname: topology
-      formvalue: "classic"
-      options:
-        - value: "classic"
-          display: "classic"
-        - value: "transitive"
-          display: "transitive"
-
     - displayname: Classic Param - Top K
       paramtype: text
       nf_paramname: topology_topk
@@ -177,12 +167,6 @@ parameterlist:
       nf_paramname: topology_maxcomponent
       formplaceholder: Enter the topology_maxcomponent
       formvalue: "100"
-
-    - displayname: Transitive Param - Min Clique Cosine
-      paramtype: text
-      nf_paramname: topology_cliquemincosine
-      formplaceholder: Enter the topology_cliquemincosine
-      formvalue: "0.7"
 
     - displayname: Library Search Parameters
       paramtype: section
