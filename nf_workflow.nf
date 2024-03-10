@@ -62,6 +62,7 @@ params.OMETAPARAM_YAML = "job_parameters.yaml"
 params.download_usi_filename = params.OMETAPARAM_YAML // This can be changed if you want to run locally
 params.cache_directory = "data/cache"
 
+params.publishdir = "$baseDir"
 TOOL_FOLDER = "$baseDir/bin"
 
 process filesummary {
