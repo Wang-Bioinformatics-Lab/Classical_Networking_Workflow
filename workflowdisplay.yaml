@@ -113,7 +113,7 @@ Views:
                 data: "number_of_edges"
         columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
         return `
-            <a target="_blank" href="/dashboards/networkviewer?usi=mzdata:OMETATASK-${task}:nf_output/networking/components/component_${row["component_id"]}.graphml&usi-mgf=mzdata:OMETATASK-${task}:nf_output/clustering/specs_ms.mgf">View Component</a>
+            <a target="_blank" href="/dashboards/networkviewer?usi=mzdata:GNPS2:TASK-${task}-nf_output/networking/components/component_${row["component_id"]}.graphml&usi-mgf=mzdata:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf">View Component</a>
         `;}},]'
 
 -   name: Raw Spectra List
@@ -187,8 +187,8 @@ Views:
     parameters:
         baseurl: /dashboards/networkviewer
         urlparam:
-            -   usi:mzdata:OMETATASK-[task]:nf_output/networking/network.graphml
-            -   usi-mgf:mzdata:OMETATASK-[task]:nf_output/clustering/specs_ms.mgf
+            -   usi:mzdata:GNPS2:TASK-[task]-nf_output/networking/network.graphml
+            -   usi-mgf:mzdata:GNPS2:TASK-[task]-nf_output/clustering/specs_ms.mgf
 
 -   name: Visualize Network w/ Singletons in Browser
     displayname: Visualize Full Network w/ Singletons in Browser
@@ -197,8 +197,8 @@ Views:
     parameters:
         baseurl: /dashboards/networkviewer
         urlparam:
-            -   usi:mzdata:OMETATASK-[task]:nf_output/networking/network_singletons.graphml
-            -   usi-mgf:mzdata:OMETATASK-[task]:nf_output/clustering/specs_ms.mgf
+            -   usi:mzdata:GNPS2:TASK-[task]-nf_output/networking/network_singletons.graphml
+            -   usi-mgf:mzdata:GNPS2:TASK-[task]-nf_output/clustering/specs_ms.mgf
 
 -   name: Export Network in Cytoscape
     displayname: Export Network in Cytoscape
