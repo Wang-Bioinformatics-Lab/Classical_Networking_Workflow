@@ -480,6 +480,29 @@ process summaryLibrary {
     """
 }
 
+process createFeatureTable {
+    publishDir "$params.publishdir/nf_output/clustering", mode: 'copy'
+
+    errorStrategy 'ignore'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file input_clusterinfo
+
+    output:
+    file "featuretable*"
+
+    """
+    python $TOOL_FOLDER/scripts/create_feature_table.py \
+    $input_clusterinfo \
+    featuretable_reformatted_presence.csv \
+    featuretable_reformatted_spectrumcount.csv \
+    featuretable_reformatted_precursorintensity.csv
+    """
+
+}
+
 workflow {
     // Preps input spectrum files
     input_spectra_ch = Channel.fromPath(params.input_spectra)
@@ -563,5 +586,8 @@ workflow {
 
     // Splitting the components
     splitNetworkComponents(network_graphml_ch)
+
+    // Creating a feature table output
+    createFeatureTable(clusterinfo_ch)
 
 }
