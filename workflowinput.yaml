@@ -1,7 +1,7 @@
 workflowname: classical_networking_workflow
 workflowdescription: This is Classical Molecular Networking for GNPS2
 workflowlongdescription: This is Classical Molecular Networking for GNPS2
-workflowversion: "0.5.10"
+workflowversion: "0.5.11"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -93,7 +93,7 @@ parameterlist:
       nf_paramname: min_cluster_size
       formplaceholder: Enter the min_cluster_size
       formvalue: "2"
-      tooltip: "min_cluster_size"
+      tooltip: "Set to 0 to turn clustering off, be careful with this setting"
 
     - displayname: Advanced Filtering Parameters
       paramtype: section
