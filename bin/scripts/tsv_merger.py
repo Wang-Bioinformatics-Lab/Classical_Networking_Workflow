@@ -33,14 +33,20 @@ def main():
             all_results_list.append(temp_df)
     
     # merging results
-    all_results_df = pd.concat(all_results_list, ignore_index=True)
+    if len(all_results_list) > 0:
+        all_results_df = pd.concat(all_results_list, ignore_index=True)
 
-    # Filtering when appropriate
-    if args.topk is not None:
-        topk_filter = int(args.topk)
+        # Filtering when appropriate
+        if args.topk is not None:
+            topk_filter = int(args.topk)
 
-        all_results_df = all_results_df.sort_values(by=args.sort_column, ascending=False)
-        all_results_df = all_results_df.groupby(args.key_column).head(int(args.topk))
+            all_results_df = all_results_df.sort_values(by=args.sort_column, ascending=False)
+            all_results_df = all_results_df.groupby(args.key_column).head(int(args.topk))
+    else:
+        all_results_df = pd.DataFrame()
+
+
+    
 
     # writing results
     all_results_df.to_csv(args.output_file, sep="\t", index=False)
