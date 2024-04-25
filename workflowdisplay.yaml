@@ -261,7 +261,7 @@ Views:
         urlparam:
             -   workflowname:feature_augmentation_workflow
         hashparam:
-            -   input_features:TASKLOCATION/[task]/nf_output/clustering/featuretable_reformatted_presence.tsv
+            -   input_features:TASKLOCATION/[task]/nf_output/clustering/featuretable_reformatted_presence.csv
             -   input_spectra:TASKLOCATION/[task]/input_spectra
             -   description:Downstream from [task] Classical Molecular Networking
 
