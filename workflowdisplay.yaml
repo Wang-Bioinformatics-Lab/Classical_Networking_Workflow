@@ -252,6 +252,20 @@ Views:
             -   description:Downstream from [task] Classical Molecular Networking
 
 
+-   name: Downstream Analysis - Feature Augment Network
+    displayname: Downstream Analysis - Feature Augment Network
+    viewname: downstreamfeatureaugment
+    displaytype: linkout
+    parameters:
+        baseurl: /workflowinput
+        urlparam:
+            -   workflowname:feature_augmentation_workflow
+        hashparam:
+            -   input_features:TASKLOCATION/[task]/nf_output/clustering/featuretable_reformatted_presence.tsv
+            -   input_spectra:TASKLOCATION/[task]/input_spectra
+            -   description:Downstream from [task] Classical Molecular Networking
+
+
 -   name: section
     displayname: Download Network Files
     viewname: section
