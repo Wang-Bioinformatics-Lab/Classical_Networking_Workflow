@@ -17,9 +17,13 @@ def create_feature_table(clusterinfo_df, type="presence"):
     for name, group in grouped_df:
         feature_dict = {}
 
+        # by default lets calculate the mean of the m/z and retention time
+        mean_mz = group['#ParentMass'].mean()
+        mean_rt = group['#RetTime'].mean()
+
         feature_dict["row ID"] = name
-        feature_dict["row m/z"] = "0"
-        feature_dict["row retention time"] = "0"
+        feature_dict["row m/z"] = mean_mz
+        feature_dict["row retention time"] = mean_rt
 
         for filename in all_filenames:
             # checking if these filenames are in here
