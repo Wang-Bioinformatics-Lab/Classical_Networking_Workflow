@@ -31,9 +31,22 @@ def _filter_metadata(input_df, filelist):
     input_df["filename"] = input_df["filename"].apply(lambda x: os.path.basename(x))
 
     # Filtering the metadata
-    input_df = input_df[input_df["filename"].isin(filelist)]
+    filtered_input_df = input_df[input_df["filename"].isin(filelist)]
 
-    return input_df
+    # We can handle a special case where there is no extensions and the result is empty
+    if len(filtered_input_df) == 0:
+        try:
+            # create a mapping of the filelist without extension to with extension
+            filelist_mapping = {os.path.splitext(x)[0]: x for x in filelist}
+
+            # lets try mapping the filename column using this filelist mapping
+            remapped_filtered_input_df = input_df.copy()
+            remapped_filtered_input_df["filename"] = remapped_filtered_input_df["filename"].apply(lambda x: filelist_mapping.get(x, x))
+            filtered_input_df = remapped_filtered_input_df[remapped_filtered_input_df["filename"].isin(filelist)]
+        except:
+            pass
+
+    return filtered_input_df
 
 def load_usi_list(input_filename):
     # Checking the file extension
