@@ -452,11 +452,12 @@ process prepInputFiles {
     val true
 
     """
-    python $TOOL_FOLDER/scripts/download_public_data_usi.py \
+    python $TOOL_FOLDER/scripts/downloadpublicdata/bin/download_public_data_usi.py \
     $input_parameters \
     $input_spectra_folder \
     output_summary.tsv \
-    --cache_directory $cache_directory
+    --cache_directory $cache_directory \
+    --existing_dataset_directory /data/datasets/server
     """
 }
 
