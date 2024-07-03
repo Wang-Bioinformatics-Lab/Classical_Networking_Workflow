@@ -456,7 +456,8 @@ process prepInputFiles {
     $input_parameters \
     $input_spectra_folder \
     output_summary.tsv \
-    --cache_directory $cache_directory
+    --cache_directory $cache_directory \
+    --existing_dataset_directory /data/datasets/server
     """
 }
 
