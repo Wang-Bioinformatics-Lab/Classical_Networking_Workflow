@@ -2,7 +2,7 @@
 nextflow.enable.dsl=2
 
 // Spectra as input
-params.input_spectra = "data/spectra"
+params.input_spectra = "data/input_spectra"
 
 // Libraries
 params.input_libraries = "data/library"
