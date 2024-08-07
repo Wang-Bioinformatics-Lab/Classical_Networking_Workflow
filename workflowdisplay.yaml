@@ -251,6 +251,19 @@ Views:
             -   input_mgf:TASKLOCATION/[task]/nf_output/clustering/specs_ms.mgf
             -   description:Downstream from [task] Classical Molecular Networking
 
+# CMMC
+-   name: Downstream Analysis - CMMC Enrichment Analysis
+    displayname: Downstream Analysis - CMMC Enrichment Analysis
+    viewname: downstreamcmmc
+    displaytype: linkout
+    parameters:
+        baseurl: /workflowinput
+        urlparam:
+            -   workflowname:downstreamcmmc
+        hashparam:
+            -   gnps2_graphml:TASKLOCATION/[task]/nf_output/networking/network_singletons.graphml
+            -   gnps2_mgf:TASKLOCATION/[task]/nf_output/clustering/specs_ms.mgf
+            -   description:Downstream from [task] Classical Molecular Networking
 
 -   name: Downstream Analysis - Feature Augment Network
     displayname: Downstream Analysis - Feature Augment Network
@@ -264,7 +277,6 @@ Views:
             -   input_features:TASKLOCATION/[task]/nf_output/clustering/featuretable_reformatted_presence.csv
             -   input_spectra:TASKLOCATION/[task]/input_spectra
             -   description:Downstream from [task] Classical Molecular Networking
-
 
 -   name: section
     displayname: Download Network Files
