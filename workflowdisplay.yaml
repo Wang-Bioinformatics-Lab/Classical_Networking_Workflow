@@ -93,7 +93,7 @@ Views:
         `;}},
         {"targets": 10,"data": null,"render": function ( data, type, row, meta ) {
         return `
-            <img src="https://structure.gnps2.org/structureimg?smiles=${row["Smiles"]}"/>
+            <img src="https://structure.gnps2.org/structureimg?smiles=${encodeURIComponent(row["Smiles"])}"/>
         `;}},]'
 
 -   name: Network Components List
