@@ -504,6 +504,26 @@ process createFeatureTable {
 
 }
 
+process Prepare_for_ModiFinder{
+    publishDir "$params.publishdir/nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file library_file
+    file filtered_pairs_file
+
+    output:
+    file "modifinder_input.csv"
+
+    """
+    python $TOOL_FOLDER/scripts/prepare_classic_networking_for_modifinder.py \
+    $library_file \
+    $filtered_pairs_file \
+    $params.task
+    """
+}
+
 workflow {
     // Preps input spectrum files
     input_spectra_ch = Channel.fromPath(params.input_spectra)
@@ -590,5 +610,8 @@ workflow {
 
     // Creating a feature table output
     createFeatureTable(clusterinfo_ch)
+
+    // Preparing for Modifinder
+    Prepare_for_ModiFinder(gnps_library_results_ch, filtered_networking_pairs_enriched_ch)
 
 }
