@@ -85,11 +85,6 @@ def process_bothIDed_pair(librow1, librow2, addepairs, outputdata):
         addepairs.add(pair2)
         
 def main():
-    
-    if len(sys.argv) != 4:
-        print("Usage: python program.py merged_results_with_gnps.tsv filtered_pairs.tsv gnps_taskid")
-        sys.exit(1)
-
     # Create the parser
     parser = argparse.ArgumentParser(description="Process some input files and a task ID.")
 
