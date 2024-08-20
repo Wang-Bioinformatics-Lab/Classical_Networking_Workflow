@@ -98,6 +98,9 @@ def main():
     parser.add_argument('filtered_pairs_file', type=str, help='The filtered pairs file (TSV format)')
     parser.add_argument('gnps2_taskid', type=str, help='The GNPS task ID')
 
+    # output
+    parser.add_argument('output_file', type=str, help='The output file (CSV format)')
+
     # Parse the arguments
     args = parser.parse_args()
 
@@ -161,14 +164,12 @@ def main():
         output_df = pd.DataFrame(output_data)
         
         # Write output to file
-        output_filename = f"modifinder_input.csv"
-        output_df.to_csv(output_filename, sep=',', index=False)
+        output_df.to_csv(args.output_file, sep=',', index=False)
         print(f"Output written to {output_filename}")
         
     else:
         output_df = pd.DataFrame(columns=['USI1', 'USI2', 'SMILES1'])
-        output_filename = f"modifinder_input.csv"
-        output_df.to_csv(output_filename, sep=',', index=False)
+        output_df.to_csv(args.output_file, sep=',', index=False)
         print("No matches found.")
     
 
