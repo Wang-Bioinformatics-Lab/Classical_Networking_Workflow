@@ -507,6 +507,8 @@ process createFeatureTable {
 process PrepareForModiFinder{
     publishDir "$params.publishdir/nf_output", mode: 'copy'
 
+    errorStrategy 'ignore'
+
     conda "$TOOL_FOLDER/conda_env.yml"
 
     input:
