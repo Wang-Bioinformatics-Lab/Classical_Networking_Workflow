@@ -160,7 +160,7 @@ def main():
         
         # Write output to file
         output_df.to_csv(args.output_file, sep=',', index=False)
-        print(f"Output written to {output_filename}")
+        print(f"Output written to {args.output_file}")
         
     else:
         output_df = pd.DataFrame(columns=['USI1', 'USI2', 'SMILES1'])
