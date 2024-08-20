@@ -174,6 +174,19 @@ Views:
         return `
             <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["CLUSTERID1"]}&usi2=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["CLUSTERID2"]}">View Mirror</a>
         `;}}]'
+
+-   name: ModiFinder - Run Analysis
+    displayname: ModiFinder - Run Analysis
+    viewname: high_throughput_modifinder
+    displaytype: linkout
+    parameters:
+        baseurl: /workflowinput
+        urlparam:
+            -   workflowname:high_throughput_modifinder
+        hashparam:
+            -   matches_path:TASKLOCATION/[task]/nf_output/modifinder_input.csv
+            -   with_library_search:"0"
+
                 
 -   name: section
     displayname: Network Visualizations
