@@ -464,6 +464,8 @@ process prepInputFiles {
 process summaryLibrary {
     publishDir "$params.publishdir/nf_output", mode: 'copy'
 
+    maxForks 8
+
     cache 'lenient'
 
     conda "$TOOL_FOLDER/conda_env.yml"
