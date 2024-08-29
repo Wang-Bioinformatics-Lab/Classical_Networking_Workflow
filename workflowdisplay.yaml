@@ -113,7 +113,9 @@ Views:
                 data: "number_of_edges"
         columnDefs: '[ {"targets": 0,"data": null,"render": function ( data, type, row, meta ) {
         return `
-            <a target="_blank" href="/dashboards/networkviewer?usi=mzdata:GNPS2:TASK-${task}-nf_output/networking/components/component_${row["component_id"]}.graphml&usi-mgf=mzdata:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf">View Component</a>
+            <a target="_blank" href="/dashboards/networkviewer?usi=mzdata:GNPS2:TASK-${task}-nf_output/networking/components/component_${row["component_id"]}.graphml&usi-mgf=mzdata:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf">View Network Component</a>
+            <br>
+            <a target="_blank" href="https://multiplealignment.gnps2.org/setscreation/?task=${task}&component=${row["component_id"]}">View Component Alignment</a>
         `;}},]'
 
 -   name: Raw Spectra List
