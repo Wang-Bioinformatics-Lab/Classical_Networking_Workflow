@@ -7,3 +7,6 @@
 [submodule "bin/scripts/downloadpublicdata"]
 	path = bin/scripts/downloadpublicdata
 	url = https://github.com/Wang-Bioinformatics-Lab/downloadpublicdata.git
+[submodule "modules/FileSummary_Workflow"]
+	path = modules/FileSummary_Workflow
+	url = https://github.com/Wang-Bioinformatics-Lab/FileSummary_Workflow.git
