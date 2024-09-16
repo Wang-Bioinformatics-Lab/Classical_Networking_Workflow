@@ -142,7 +142,7 @@ def main():
             #both scans are identified and have smiles
             librow1 = scan2librowdict[clusterid1]
             librow2 = scan2librowdict[clusterid2]
-            process_bothIDed_pair(librow1, librow2, addedPairs, output_data)
+            # process_bothIDed_pair(librow1, librow2, addedPairs, output_data)
 
         elif clusterid1 in scan2librowdict:
             #clusterid1 is identified
