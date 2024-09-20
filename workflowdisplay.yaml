@@ -62,6 +62,12 @@ Views:
             <a target="_blank" href="/result?viewname=rawspectra&filter=${encodeURIComponent(JSON.stringify([filterdict]))}&task=${task}">View Raw Spectra in Cluster</a>
             <br>
             <a target="_blank" href="/dashboards/networkviewer?usi=mzdata:GNPS2:TASK-${task}-nf_output/networking/components/component_${row["component"]}.graphml&usi-mgf=mzdata:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf">View Network Component</a>
+        `;}},
+        {"targets": 8,"data": "component","render": function ( data, type, row, meta ) {
+        return `
+            ${row["component"]}
+            <br>
+            <a target="_blank" href="https://multiplealignment.gnps2.org/setscreation/?task=${task}&component=${row["component"]}">View Component Alignment</a>
         `;}}]'
 
 -   name: Library Match Results
