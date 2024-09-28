@@ -19,8 +19,10 @@ params.min_cluster_size = "2"
 params.pm_tolerance = "2.0"
 params.fragment_tolerance = "0.5"
 
-// Filtereing
+// Filtering
 params.min_peak_intensity = "0.0"
+params.window_filter = "1"
+params.precursor_filter = "1"
 
 // Molecular Networking Options
 params.similarity = "gnps"
