@@ -13,7 +13,7 @@ def write_params(input_spectra_folder, tool_path, output_params_filename,
                  fragment_tolerance=0.5, 
                  min_peak_intensity=0.0,
                  window_filter=1,
-                 precursor_window_filter=1):
+                 precursor_filter=1):
 
     # listing all files
     all_mgf_files = glob.glob(os.path.join(input_spectra_folder, "*.mgf"))
@@ -45,7 +45,7 @@ def write_params(input_spectra_folder, tool_path, output_params_filename,
         params_file.write("MIN_PEAK_INT={}\n".format(min_peak_intensity))
 
         # Filtering
-        params_file.write("FILTER_PRECURSOR_WINDOW={}\n".format(precursor_window_filter))
+        params_file.write("FILTER_PRECURSOR_WINDOW={}\n".format(precursor_filter))
         params_file.write("FILTER_STDDEV_PEAK_INT=0.0\n")
 
 
@@ -70,7 +70,7 @@ def main():
     # Filters
     parser.add_argument('--min_peak_intensity', default="0.0", help='min_peak_intensity')
     parser.add_argument('--window_filter', default="1", help='window_filter')
-    parser.add_argument('--precursor_window_filter', default="1", help='precursor_window_filter')
+    parser.add_argument('--precursor_filter', default="1", help='precursor_filter')
     
     args = parser.parse_args()
 
@@ -82,7 +82,7 @@ def main():
                  fragment_tolerance=args.fragment_tolerance, 
                  min_peak_intensity=args.min_peak_intensity,
                  window_filter=args.window_filter,
-                 precursor_window_filter=args.precursor_window_filter)
+                 precursor_filter=args.precursor_filter)
 
     # Running the data
     mainspecnets_binary = os.path.join(args.tool_dir, "main_specnets")

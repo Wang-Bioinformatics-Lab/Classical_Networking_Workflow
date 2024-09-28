@@ -107,7 +107,9 @@ process mscluster {
     --min_cluster_size $params.min_cluster_size \
     --pm_tolerance $params.pm_tolerance \
     --fragment_tolerance $params.fragment_tolerance \
-    --min_peak_intensity $params.min_peak_intensity
+    --min_peak_intensity $params.min_peak_intensity \
+    --window_filter $params.window_filter \
+    --precursor_filter $params.precursor_filter
     """
 }
 

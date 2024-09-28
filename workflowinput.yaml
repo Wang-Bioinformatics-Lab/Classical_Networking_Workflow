@@ -1,7 +1,7 @@
 workflowname: classical_networking_workflow
 workflowdescription: This is Classical Molecular Networking for GNPS2
 workflowlongdescription: This is Classical Molecular Networking for GNPS2
-workflowversion: "2024.09.20"
+workflowversion: "2024.09.27"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -98,12 +98,12 @@ parameterlist:
     - displayname: Advanced Filtering Parameters
       paramtype: section
 
-    # - displayname: Min Peak Intensity
-    #   paramtype: text
-    #   nf_paramname: min_peak_intensity
-    #   formplaceholder: Enter the min_peak_intensity
-    #   formvalue: "0.0"
-    #   tooltip: "min_peak_intensity"
+    - displayname: Min Peak Intensity
+      paramtype: text
+      nf_paramname: min_peak_intensity
+      formplaceholder: Enter the min_peak_intensity
+      formvalue: "0.0"
+      tooltip: "min_peak_intensity"
     
     - displayname: Window Filter
       paramtype: select
