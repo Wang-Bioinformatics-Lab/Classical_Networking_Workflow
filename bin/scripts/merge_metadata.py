@@ -111,10 +111,11 @@ def main():
     usi_list = load_usi_list(args.input_usi_information)
     usi_filenames = [os.path.basename(usi.split(":")[2]) for usi in usi_list]
     
-    #remove USIs which we have more than once keeping the last occurance (which should be the one we keep after download)
-    last_occurrence_index = {filename: idx for idx, filename in enumerate(usi_filenames)}
-    usi_list = [usi_list[idx] for filename, idx in last_occurrence_index.items()]
-    usi_filenames = [usi_filenames[idx] for filename, idx in last_occurrence_index.items()]
+    # Remove USIs which we have more than once, keeping the first occurrence
+    first_occurrence_index = {filename: idx for idx, filename in enumerate(usi_filenames) if filename not in locals().get('first_occurrence_index', {})}
+    usi_list = [usi_list[idx] for filename, idx in first_occurrence_index.items()]
+    usi_filenames = [usi_filenames[idx] for filename, idx in first_occurrence_index.items()]
+
 
     # Getting all the input files
     all_input_files = usi_filenames.copy()
@@ -131,7 +132,18 @@ def main():
         # getting basename for all input files
         spectra_filenames = [os.path.basename(x) for x in spectra_files]
 
-        # TODO: figure out a way we can take care of duplicated filenames between public and private data. Will likely have to be done already durng download since spectra_folder private files are likely replaced by downlaoded public files
+        # Remove entries from public usi_filenames and usi_list if they are in spectra_filenames as private files overwrite public files
+        usi_list, usi_filenames = zip(*[
+            (usi, filename) for usi, filename in zip(usi_list, usi_filenames) 
+            if filename not in spectra_filenames
+        ])
+
+        # Convert back to lists after filtering
+        usi_list = list(usi_list)
+        usi_filenames = list(usi_filenames)
+
+        # Getting all the input files
+        all_input_files = usi_filenames.copy()
 
         all_input_files += spectra_filenames
 
@@ -145,31 +157,43 @@ def main():
     usi_list_with_redu_data_df = pd.DataFrame()
 
     if args.include_redu == "Yes" and len(usi_list) > 0:
+        try:
+            # Downloading the ReDU Metadata
+            redu_df = get_redu_metadata()
 
-        # Downloading the ReDU Metadata
-        redu_df = get_redu_metadata()
+            # We'll match up the data from the dataset accession and the filename
+            usi_list_with_redu_data_df = match_usi_to_redu_metadata(usi_list, redu_df)
 
-        # We'll match up the data from the dataset accession and the filename
-        usi_list_with_redu_data_df = match_usi_to_redu_metadata(usi_list, redu_df)
+        except Exception as e:
+            print("There was a problem with downloading or matching the ReDU metadata:", e)
 
 
     # combine private metadata for public data with redu metadata for public files
     if 'filename' in input_metadata.columns and len(usi_list_with_redu_data_df) > 0:
+        try:
 
-        if input_metadata['filename'].isin(usi_list_with_redu_data_df['filename']).any():
+            if input_metadata['filename'].isin(usi_list_with_redu_data_df['filename']).any():
 
-            # merge the input_metadata with usi_list_with_redu_data_df
-            usi_list_with_redu_data_df = pd.merge(input_metadata.drop(columns=input_metadata.columns.intersection(usi_list_with_redu_data_df.columns).drop('filename')),
-                                                  usi_list_with_redu_data_df, on="filename", how="right")
+                # merge the input_metadata with usi_list_with_redu_data_df
+                usi_list_with_redu_data_df = pd.merge(input_metadata.drop(columns=input_metadata.columns.intersection(usi_list_with_redu_data_df.columns).drop('filename')),
+                                                    usi_list_with_redu_data_df, on="filename", how="right")
 
-            # remove rows with filenames from input_metadata that have matches in usi_list_with_redu_data_df
-            input_metadata = input_metadata[~input_metadata['filename'].isin(usi_list_with_redu_data_df['filename'])]
+                # remove rows with filenames from input_metadata that have matches in usi_list_with_redu_data_df
+                input_metadata = input_metadata[~input_metadata['filename'].isin(usi_list_with_redu_data_df['filename'])]
+
+        except Exception as e:
+            print("There was a problem with merging private and redu metadata for public data", e)
 
     # combine private metadata for private raw data with metadata of public files
     if len(usi_list_with_redu_data_df) > 0 and len(input_metadata) > 0:
 
-        input_metadata['ATTRIBUTE_DataSource'] = 'private'
-        output_metadata = pd.concat([input_metadata, usi_list_with_redu_data_df], ignore_index=True, sort=False)
+        try:
+
+            input_metadata['ATTRIBUTE_DataSource'] = 'private'
+            output_metadata = pd.concat([input_metadata, usi_list_with_redu_data_df], ignore_index=True, sort=False)
+
+        except Exception as e:
+            print("There was a problem with merging private metadata for private raw data with metadata of public files", e)
 
     # if we have only metadata for public files just return it (no private raw data-metadat to add)
     elif len(usi_list_with_redu_data_df) > 0:
@@ -185,16 +209,21 @@ def main():
 
     # If we want per file grouping
     if args.per_file_grouping == "Yes":
-        new_metadata = pd.DataFrame()
 
-        new_metadata["filename"] = all_input_files
-        new_metadata["ATTRIBUTE_PerFileGrouping"] = new_metadata["filename"]
+        try:
+            new_metadata = pd.DataFrame()
 
-        # joining it with the input_metadata
-        if "filename" in output_metadata:
-            output_metadata = pd.merge(output_metadata, new_metadata, on="filename", how="left")
-        else:
-            output_metadata = new_metadata
+            new_metadata["filename"] = all_input_files
+            new_metadata["ATTRIBUTE_PerFileGrouping"] = new_metadata["filename"]
+
+            # joining it with the input_metadata
+            if "filename" in output_metadata:
+                output_metadata = pd.merge(output_metadata, new_metadata, on="filename", how="left")
+            else:
+                output_metadata = new_metadata
+
+        except Exception as e:
+            print("There was a problem with per file grouping:", e)
 
     # Filtering the output metadata
     try:
