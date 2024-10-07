@@ -152,6 +152,8 @@ def main():
         # We'll match up the data from the dataset accession and the filename
         usi_list_with_redu_data_df = match_usi_to_redu_metadata(usi_list, redu_df)
 
+
+    # combine private metadata for public data with redu metadata for public files
     if 'filename' in input_metadata.columns and len(usi_list_with_redu_data_df) > 0:
 
         if input_metadata['filename'].isin(usi_list_with_redu_data_df['filename']).any():
@@ -160,18 +162,24 @@ def main():
             usi_list_with_redu_data_df = pd.merge(input_metadata.drop(columns=input_metadata.columns.intersection(usi_list_with_redu_data_df.columns).drop('filename')),
                                                   usi_list_with_redu_data_df, on="filename", how="right")
 
-            #remove rows with filenames from input_metadata that have matches in usi_list_with_redu_data_df
+            # remove rows with filenames from input_metadata that have matches in usi_list_with_redu_data_df
             input_metadata = input_metadata[~input_metadata['filename'].isin(usi_list_with_redu_data_df['filename'])]
 
+    # combine private metadata for private raw data with metadata of public files
     if len(usi_list_with_redu_data_df) > 0 and len(input_metadata) > 0:
 
         input_metadata['ATTRIBUTE_DataSource'] = 'private'
         output_metadata = pd.concat([input_metadata, usi_list_with_redu_data_df], ignore_index=True, sort=False)
 
+    # if we have only metadata for public files just return it (no private raw data-metadat to add)
     elif len(usi_list_with_redu_data_df) > 0:
         output_metadata = usi_list_with_redu_data_df
+
+    # if we only have private metadata but no metadata for public files return this
     elif len(input_metadata) > 0:
         output_metadata = input_metadata
+
+    # if we have no metadata return empty dataframe
     else:
         output_metadata = pd.DataFrame()
 
