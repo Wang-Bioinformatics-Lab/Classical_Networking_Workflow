@@ -109,13 +109,17 @@ def main():
 
     # Load USI list and extract filenames
     usi_list = load_usi_list(args.input_usi_information)
-    usi_filenames = [os.path.basename(usi.split(":")[2]) for usi in usi_list]
-    
-    # Remove USIs which we have more than once, keeping the first occurrence
-    first_occurrence_index = {filename: idx for idx, filename in enumerate(usi_filenames) if filename not in locals().get('first_occurrence_index', {})}
-    usi_list = [usi_list[idx] for filename, idx in first_occurrence_index.items()]
-    usi_filenames = [usi_filenames[idx] for filename, idx in first_occurrence_index.items()]
+    usi_filenames = []
 
+    try:
+        usi_filenames = [os.path.basename(usi.split(":")[2]) for usi in usi_list]
+        
+        # Remove USIs which we have more than once, keeping the first occurrence
+        first_occurrence_index = {filename: idx for idx, filename in enumerate(usi_filenames) if filename not in locals().get('first_occurrence_index', {})}
+        usi_list = [usi_list[idx] for filename, idx in first_occurrence_index.items()]
+        usi_filenames = [usi_filenames[idx] for filename, idx in first_occurrence_index.items()]
+    except:
+        pass
 
     # Getting all the input files
     all_input_files = usi_filenames.copy()
