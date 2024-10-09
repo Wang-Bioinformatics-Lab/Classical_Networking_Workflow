@@ -119,6 +119,8 @@ def main():
         usi_list = [usi_list[idx] for filename, idx in first_occurrence_index.items()]
         usi_filenames = [usi_filenames[idx] for filename, idx in first_occurrence_index.items()]
     except:
+        usi_list = []
+        usi_filenames = []
         pass
 
     # Getting all the input files
@@ -137,10 +139,13 @@ def main():
         spectra_filenames = [os.path.basename(x) for x in spectra_files]
 
         # Remove entries from public usi_filenames and usi_list if they are in spectra_filenames as private files overwrite public files
-        usi_list, usi_filenames = zip(*[
-            (usi, filename) for usi, filename in zip(usi_list, usi_filenames) 
-            if filename not in spectra_filenames
-        ])
+        try:
+            usi_list, usi_filenames = zip(*[
+                (usi, filename) for usi, filename in zip(usi_list, usi_filenames) 
+                if filename not in spectra_filenames
+            ])
+        except:
+            pass
 
         # Convert back to lists after filtering
         usi_list = list(usi_list)
