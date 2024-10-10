@@ -3,6 +3,7 @@ import pandas as pd
 import argparse
 import yaml
 import glob
+import numpy as np
 
 def _load_metadata(input_filename):
     # look at extension
@@ -50,17 +51,23 @@ def _filter_metadata(input_df, filelist):
     return filtered_input_df
 
 def load_usi_list(input_filename):
-    # Checking the file extension
-    if input_filename.endswith(".yaml"):
-        # Loading yaml file
-        parameters = yaml.load(open(input_filename), Loader=yaml.SafeLoader)
-        usi_list = parameters["usi"].split("\n")
-    elif input_filename.endswith(".tsv"):
-        df = pd.read_csv(input_filename, sep="\t")
-        usi_list = df["usi"].tolist()
 
-    # Cleaning USI list
-    usi_list = [usi.lstrip().rstrip() for usi in usi_list]
+    try:
+        # Checking the file extension
+        if input_filename.endswith(".yaml"):
+            # Loading yaml file
+            parameters = yaml.load(open(input_filename), Loader=yaml.SafeLoader)
+            usi_list = parameters["usi"].split("\n")
+        elif input_filename.endswith(".tsv"):
+            df = pd.read_csv(input_filename, sep="\t")
+            usi_list = df["usi"].tolist()
+
+        # Cleaning USI list
+        usi_list = [usi.lstrip().rstrip() for usi in usi_list]
+
+    except Exception as e:
+        print("Error while attempting to read USIs:", e)
+        usi_list = []
 
     return usi_list
 
@@ -104,6 +111,7 @@ def main():
     parser.add_argument('--include_redu', default="No", help='Include redu metadata integration')
     parser.add_argument('--per_file_grouping', default="No", help='Treat each file as a group')
     parser.add_argument('--spectra_folder', default=None, help='Input Folder of Spectra Files')
+    parser.add_argument('--private_spectra_file_list', default=None, help='Input TSV file of private spectra files')
 
     args = parser.parse_args()
 
@@ -118,7 +126,19 @@ def main():
         first_occurrence_index = {filename: idx for idx, filename in enumerate(usi_filenames) if filename not in locals().get('first_occurrence_index', {})}
         usi_list = [usi_list[idx] for filename, idx in first_occurrence_index.items()]
         usi_filenames = [usi_filenames[idx] for filename, idx in first_occurrence_index.items()]
-    except:
+
+        # Remove USIs of files which have identical names to private spectra files
+        private_spectra = pd.read_csv(args.private_spectra_file_list, sep='\t')
+        private_spectra['Filename'] = private_spectra['Filename'].apply(os.path.basename)
+        private_spectra_file_names = private_spectra['Filename'].tolist() if not private_spectra.empty else []
+
+        usi_list, usi_filenames = map(list, zip(*[
+            (usi, filename) for usi, filename in zip(usi_list, usi_filenames) 
+            if filename not in private_spectra_file_names
+        ]))
+
+    except Exception as e:
+        print("Error during USI processing:", e)
         usi_list = []
         usi_filenames = []
         pass
@@ -137,15 +157,6 @@ def main():
 
         # getting basename for all input files
         spectra_filenames = [os.path.basename(x) for x in spectra_files]
-
-        # Remove entries from public usi_filenames and usi_list if they are in spectra_filenames as private files overwrite public files
-        try:
-            usi_list, usi_filenames = zip(*[
-                (usi, filename) for usi, filename in zip(usi_list, usi_filenames) 
-                if filename not in spectra_filenames
-            ])
-        except:
-            pass
 
         # Convert back to lists after filtering
         usi_list = list(usi_list)
@@ -173,42 +184,84 @@ def main():
             # We'll match up the data from the dataset accession and the filename
             usi_list_with_redu_data_df = match_usi_to_redu_metadata(usi_list, redu_df)
 
+            # If public files are not in ReDU DataSource public but not in redu as info
+            # Find filenames in usi_filenames that are not present in the 'filename' column of usi_list_with_redu_data_df
+            missing_filenames = [filename for filename in usi_filenames if filename not in usi_list_with_redu_data_df['filename'].values]
+            # If there are any missing filenames, add them with all values being NaN
+            if missing_filenames:
+                # Create a DataFrame for the missing entries with NaN for other columns
+                missing_data = {col: np.nan for col in usi_list_with_redu_data_df.columns}
+                missing_data['filename'] = missing_filenames
+                missing_data['ATTRIBUTE_DataSource'] = 'public_no_ReDU'
+                
+                # Convert the dictionary to a DataFrame, repeating NaNs for each missing filename
+                new_entries_df = pd.DataFrame(missing_data)
+                
+                # Concatenate the new entries with the original DataFrame
+                usi_list_with_redu_data_df = pd.concat([usi_list_with_redu_data_df, new_entries_df], ignore_index=True)
+
+
         except Exception as e:
             print("There was a problem with downloading or matching the ReDU metadata:", e)
 
 
     # combine private metadata for public data with redu metadata for public files
+    ##############################################################################
     if 'filename' in input_metadata.columns and len(usi_list_with_redu_data_df) > 0:
         try:
 
-            if input_metadata['filename'].isin(usi_list_with_redu_data_df['filename']).any():
+            input_metadata_redu_enrichment = input_metadata[~input_metadata['filename'].isin(private_spectra_file_names)]
+            input_metadata_redu_enrichment = input_metadata_redu_enrichment.drop(columns=input_metadata_redu_enrichment.columns.intersection(usi_list_with_redu_data_df.columns).drop('filename'))
+
+            if input_metadata_redu_enrichment['filename'].isin(usi_list_with_redu_data_df['filename']).any():
+
 
                 # merge the input_metadata with usi_list_with_redu_data_df
-                usi_list_with_redu_data_df = pd.merge(input_metadata.drop(columns=input_metadata.columns.intersection(usi_list_with_redu_data_df.columns).drop('filename')),
+                usi_list_with_redu_data_df = pd.merge(input_metadata_redu_enrichment,
                                                     usi_list_with_redu_data_df, on="filename", how="right")
-
+                
                 # remove rows with filenames from input_metadata that have matches in usi_list_with_redu_data_df
-                input_metadata = input_metadata[~input_metadata['filename'].isin(usi_list_with_redu_data_df['filename'])]
+                input_metadata = input_metadata[input_metadata['filename'].isin(private_spectra_file_names)]
 
         except Exception as e:
-            print("There was a problem with merging private and redu metadata for public data", e)
+            print("There was a problem with merging private and redu metadata for public data:", e)
 
     # combine private metadata for private raw data with metadata of public files
-    if len(usi_list_with_redu_data_df) > 0 and len(input_metadata) > 0:
+    ##############################################################################
+    if len(usi_list_with_redu_data_df) > 0 and len(private_spectra_file_names) > 0:
 
         try:
+
+            if not 'filename' in input_metadata.columns:
+                print('No metadata file with filename column found.')
+                input_metadata = pd.DataFrame({'filename': []})
+
+            # add rows for private spectra files that are not in metadata table
+            existing_filenames = set(input_metadata['filename'])
+            new_filenames = [fname for fname in private_spectra_file_names if fname not in existing_filenames]
+
+            if len(new_filenames) > 0:
+                print('Some spectra files not present in metadata files.')
+
+                missing_data = {col: np.nan for col in input_metadata.columns}
+                missing_data['filename'] = new_filenames
+
+                new_entries_df = pd.DataFrame(missing_data)
+                input_metadata = pd.concat([input_metadata, new_entries_df], ignore_index=True)
 
             input_metadata['ATTRIBUTE_DataSource'] = 'private'
             output_metadata = pd.concat([input_metadata, usi_list_with_redu_data_df], ignore_index=True, sort=False)
 
         except Exception as e:
-            print("There was a problem with merging private metadata for private raw data with metadata of public files", e)
+            print("There was a problem with merging private metadata for private raw data with metadata of public files:", e)
 
     # if we have only metadata for public files just return it (no private raw data-metadat to add)
+    ##############################################################################
     elif len(usi_list_with_redu_data_df) > 0:
         output_metadata = usi_list_with_redu_data_df
 
     # if we only have private metadata but no metadata for public files return this
+    ##############################################################################
     elif len(input_metadata) > 0:
         output_metadata = input_metadata
 
@@ -233,6 +286,15 @@ def main():
 
         except Exception as e:
             print("There was a problem with per file grouping:", e)
+
+
+    # Remove all columns where we have no data
+    if len(output_metadata) > 0:
+        try:
+            output_metadata = output_metadata.loc[:, ~output_metadata.apply(lambda col: col.isna() | (col == 'missing value')).all()]
+        except Exception as e:
+            print("There was a problem with removing columns with no data:", e)
+
 
     # Filtering the output metadata
     try:
