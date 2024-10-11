@@ -260,6 +260,7 @@ process createMetadataFile {
     file input_metadata
     file usi_information
     file input_spectra_folder
+    file private_spectra_file_list
 
     output:
     file "merged_metadata.tsv"
@@ -272,7 +273,8 @@ process createMetadataFile {
     merged_metadata.tsv \
     --include_redu $params.redu_metadata_integration \
     --per_file_grouping $params.metadata_per_file_grouping \
-    --spectra_folder $input_spectra_folder
+    --spectra_folder $input_spectra_folder \
+    --private_spectra_file_list $private_spectra_file_list
     """
 }
 
@@ -454,8 +456,12 @@ process prepInputFiles {
 
     output:
     val true
+    file 'private_spectra_files.tsv'
 
     """
+    python $TOOL_FOLDER/scripts/make_private_spectra_list.py $input_spectra_folder \
+    private_spectra_files.tsv
+
     python $TOOL_FOLDER/scripts/downloadpublicdata/bin/download_public_data_usi.py \
     $input_parameters \
     $input_spectra_folder \
@@ -537,9 +543,9 @@ workflow {
     // Preps input spectrum files
     input_spectra_ch = Channel.fromPath(params.input_spectra)
 
-    // Downloads input data
+    // Downloads input data and lists privtae spectra
     usi_download_ch = Channel.fromPath(params.download_usi_filename)
-    (_download_ready) = prepInputFiles(usi_download_ch, Channel.fromPath(params.cache_directory), input_spectra_ch)
+    (_download_ready, private_spectra_file_list) = prepInputFiles(usi_download_ch, Channel.fromPath(params.cache_directory), input_spectra_ch)
 
     // File summaries
     filesummary(input_spectra_ch, _download_ready)
@@ -602,7 +608,7 @@ workflow {
 
     
     // We will also include ReDU Metadata if desired
-    merged_metadata_ch = createMetadataFile(input_metadata_ch, usi_download_ch, input_spectra_ch)
+    merged_metadata_ch = createMetadataFile(input_metadata_ch, usi_download_ch, input_spectra_ch, private_spectra_file_list)
     
     
     // Enriching the network with group mappings
