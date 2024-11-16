@@ -101,6 +101,36 @@ def match_usi_to_redu_metadata(usi_list, redu_df):
 
     return merged_df
 
+def capitalize_columns(df):
+    # Create a copy to avoid modifying the original DataFrame
+    df = df.copy()
+
+    # Step 1: Generate new column names
+    new_col_names = []
+    for col in df.columns:
+        if col.lower() == 'filename':
+            new_col_names.append('filename')  # Keep 'filename' as is
+        else:
+            new_col_names.append(col.upper())  # Capitalize other column names
+
+    # Step 2: Identify duplicates and keep the first occurrence
+    seen = set()
+    cols_to_keep = []
+    final_col_names = []
+    for idx, col_name in enumerate(new_col_names):
+        if col_name not in seen:
+            seen.add(col_name)
+            cols_to_keep.append(idx)        # Index of columns to keep
+            final_col_names.append(col_name)  # Corresponding column name
+        else:
+            pass  # Duplicate found, skip this column
+
+    # Step 3: Select columns to keep and update the column names
+    df = df.iloc[:, cols_to_keep]
+    df.columns = final_col_names
+
+    return df
+
 def main():
     # Parse arguments
     parser = argparse.ArgumentParser()
@@ -299,6 +329,7 @@ def main():
     # Filtering the output metadata
     try:
         output_metadata = _filter_metadata(output_metadata, all_input_files)
+        output_metadata = capitalize_columns(output_metadata)
     except:
         pass
 
