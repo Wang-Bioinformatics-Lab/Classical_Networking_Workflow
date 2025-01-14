@@ -274,7 +274,7 @@ Views:
     parameters:
         baseurl: /workflowinput
         urlparam:
-            -   workflowname:downstreamcmmc
+            -   workflowname:cmmc_gnps_network_enrichment_workflow
         hashparam:
             -   gnps2_graphml:TASKLOCATION/[task]/nf_output/networking/network_singletons.graphml
             -   gnps2_mgf:TASKLOCATION/[task]/nf_output/clustering/specs_ms.mgf
