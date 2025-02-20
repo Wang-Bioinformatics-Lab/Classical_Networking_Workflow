@@ -110,6 +110,17 @@ def main():
     except FileNotFoundError:
         print(f"Error: File '{merged_file}' not found.")
         sys.exit(1)
+    except pd.errors.EmptyDataError:
+        print(f"Error: File '{merged_file}' is empty.")
+        merged_df = pd.DataFrame()
+        
+    if len(merged_df) == 0:
+        # Create output DataFrame
+        output_df = pd.DataFrame(columns=['USI1', 'USI2', 'SMILES1'])
+        output_df.to_csv(args.output_file, sep=',', index=False)
+        print("No matches found.")
+        sys.exit(0)
+        
     
     #ignore hits with no smiles structure
     merged_df = merged_df.dropna(subset=['Smiles'])
