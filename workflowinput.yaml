@@ -153,6 +153,16 @@ parameterlist:
       formplaceholder: Enter the networking_max_shift
       formvalue: "1999"
 
+    - displayname: all_pairwise_method
+      paramtype: select
+      nf_paramname: cal_all_pairs
+      formvalue: "gnps"
+      options:
+        - value: "gnps"
+          display: "GNPS"
+        - value: "index"
+          display: "GNPS_Index1"
+
     - displayname: Network Topology Parameters
       paramtype: section
 
