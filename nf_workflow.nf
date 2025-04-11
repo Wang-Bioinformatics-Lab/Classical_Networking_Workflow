@@ -2,7 +2,7 @@
 nextflow.enable.dsl=2
 
 // Spectra as input
-params.input_spectra = "data/input_spectra"
+params.input_spectra = "/data/datasets/server/Collections/Orbitrap-Datasets/MSV000084030/ccms_peak/*.mzML"
 
 // Libraries
 params.input_libraries = "data/library"
@@ -27,6 +27,7 @@ params.precursor_filter = "1"
 // Molecular Networking Options
 params.similarity = "gnps"
 params.topology = "classic" // or can be transitive
+params.cal_all_pairs ='gnps' //or can be index
 
 params.parallelism = 24
 params.networking_min_matched_peaks = 6
@@ -250,6 +251,25 @@ process calculatePairs {
     """
 }
 
+process calculatePairs_index {
+    publishDir "$params.publishdir/nf_output/temp_pairs", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file spectrum_file
+
+    output:
+    file "*_aligns.tsv" optional true
+
+    """
+    python $TOOL_FOLDER/scripts/index_all_pairwise.py \
+    -t $spectrum_file \
+    -o 0.params_aligns.tsv\
+    --tolerance $params.fragment_tolerance \
+    --threshold $params.networking_min_cosine
+    """
+}
 // Creating the metadata file
 process createMetadataFile {
     publishDir "$params.publishdir/nf_output/metadata", mode: 'copy'
@@ -578,9 +598,13 @@ workflow {
     gnps_library_results_ch = gnps_library_results_ch.ifEmpty(file("NO_FILE"))
 
     // Networking
-    params_ch = networkingGNPSPrepParams(clustered_spectra_ch)
-    networking_results_temp_ch = calculatePairs(clustered_spectra_ch, params_ch.collect())
-
+    if(params.cal_all_pairs == "gnps"){
+        params_ch = networkingGNPSPrepParams(clustered_spectra_ch)
+        networking_results_temp_ch = calculatePairs(clustered_spectra_ch, params_ch.collect())
+    }
+    else if (params.cal_all_pairs == "index"){
+        networking_results_temp_ch = calculatePairs_index(clustered_spectra_ch)
+    }
     merged_networking_pairs_ch = networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
 
     // Filtering the network

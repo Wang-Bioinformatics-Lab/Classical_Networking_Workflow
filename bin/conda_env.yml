@@ -12,4 +12,6 @@ dependencies:
     - networkx
     - pyteomics
     - pyyaml
+    - pymzml
     - openpyxl
+    - numba
