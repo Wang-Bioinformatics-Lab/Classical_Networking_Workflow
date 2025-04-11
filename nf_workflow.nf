@@ -25,7 +25,6 @@ params.window_filter = "1"
 params.precursor_filter = "1"
 
 // Molecular Networking Options
-params.similarity = "gnps"
 params.topology = "classic" // or can be transitive
 params.cal_all_pairs ='gnps' //or can be index
 
