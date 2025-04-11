@@ -1,7 +1,7 @@
 workflowname: classical_networking_workflow
 workflowdescription: This is Classical Molecular Networking for GNPS2
 workflowlongdescription: This is Classical Molecular Networking for GNPS2
-workflowversion: "2025.02.19"
+workflowversion: "2025.04.11"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
