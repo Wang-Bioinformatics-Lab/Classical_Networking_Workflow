@@ -95,7 +95,7 @@ parameterlist:
       formvalue: "2"
       tooltip: "Set to 0 to turn clustering off, be careful with this setting"
 
-    - displayname: Clustering Methods
+    - displayname: Clustering Tool
       paramtype: select
       nf_paramname: cluster_method
       formvalue: "MS-Cluster"

@@ -133,7 +133,7 @@ process falcon {
     falcon  \
     ${inputSpectra} \
     falcon --export_representatives \
-    --precursor_tol 20 ppm \
+    --precursor_tol 0.05 Da \
     --fragment_tol 0.05 \
     --min_mz_range 0 \
     --min_mz 0 \
