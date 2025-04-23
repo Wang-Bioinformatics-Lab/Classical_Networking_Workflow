@@ -627,7 +627,7 @@ workflow {
         (clustered_spectra_intermediate_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch, _download_ready)
     }
     else if (params.cluster_method == "Falcon"){
-        input_falcon_spectra_ch = params.input_spectra + "/*.mzML"
+        input_falcon_spectra_ch = params.input_spectra + "/*"
         (clustered_spectra_falcon_ch, falcon_tsv_ch) = falcon(input_falcon_spectra_ch, _download_ready)
         (clusterinfo_ch, clustersummary_ch, clustered_spectra_intermediate_ch) = summarize_falcon(falcon_tsv_ch, clustered_spectra_falcon_ch)
     }
