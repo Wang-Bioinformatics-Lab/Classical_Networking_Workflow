@@ -1,0 +1,21 @@
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+channel_priority: strict
+dependencies:
+  - python=3.10
+  - pandas=2.2.0
+  - pyteomics=4.7.1
+  - pip:
+    - numpy==1.23.4
+    - xmltodict
+    - requests
+    - tqdm
+    - psutil
+    - pyopenms==3.0.0
+    - spectrum-utils==0.3.5
+    - falcon-ms
+    - pymzml
+    - numcodecs
+    - pyarrow

@@ -95,6 +95,16 @@ parameterlist:
       formvalue: "2"
       tooltip: "Set to 0 to turn clustering off, be careful with this setting"
 
+    - displayname: Clustering Methods
+      paramtype: select
+      nf_paramname: cluster_method
+      formvalue: "MS-Cluster"
+      options:
+        - value: "MS-Cluster"
+          display: "MS-Cluster"
+        - value: "Falcon"
+          display: "Falcon"
+
     - displayname: Advanced Filtering Parameters
       paramtype: section
 
