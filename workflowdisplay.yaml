@@ -307,6 +307,15 @@ Views:
             -   matches_path:TASKLOCATION/[task]/nf_output/modifinder_input.csv
             -   with_library_search:"0"
 
+-   name: PostNetworking - MassQL Interactive Analysis
+    displayname: PostNetworking - MassQL Interactive Analysis
+    viewname: massqlpostmn
+    displaytype: linkout
+    parameters:
+        baseurl: "https://massqlpostmn.gnps2.org"
+        urlparam:
+            -   task_id:[task]
+
 -   name: section
     displayname: Download Network Files
     viewname: section
