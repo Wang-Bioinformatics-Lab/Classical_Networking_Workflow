@@ -28,6 +28,7 @@ params.precursor_filter = "1"
 params.similarity = "gnps"
 params.topology = "classic" // or can be transitive
 params.cal_all_pairs ='gnps' //or can be index
+params.multi_charge = "false" //multi charge soring option for index
 
 params.parallelism = 24
 params.networking_min_matched_peaks = 6
@@ -267,7 +268,8 @@ process calculatePairs_index {
     -t $spectrum_file \
     -o 0.params_aligns.tsv\
     --tolerance $params.fragment_tolerance \
-    --threshold $params.networking_min_cosine
+    --threshold $params.networking_min_cosine \
+    ${params.multi_charge == 'true' ? '--multi_charge' : ''}
     """
 }
 // Creating the metadata file
