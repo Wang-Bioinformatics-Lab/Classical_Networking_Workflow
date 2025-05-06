@@ -1,7 +1,7 @@
 workflowname: classical_networking_workflow
 workflowdescription: This is Classical Molecular Networking for GNPS2
 workflowlongdescription: This is Classical Molecular Networking for GNPS2
-workflowversion: "2025.04.11"
+workflowversion: "2025.05.06"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -160,8 +160,10 @@ parameterlist:
       options:
         - value: "gnps"
           display: "GNPS"
-        - value: "index"
-          display: "GNPS_Index1"
+        - value: "index_single"
+          display: "GNPS_Index1_single_charge"
+        - value: "index_multi"
+          display: "GNPS_Index1_multi_charge"
 
     - displayname: Network Topology Parameters
       paramtype: section
