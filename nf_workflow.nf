@@ -26,8 +26,8 @@ params.precursor_filter = "1"
 
 // Molecular Networking Options
 params.topology = "classic" // or can be transitive
-params.cal_all_pairs ='gnps' //or can be index
-params.multi_charge = "false" //multi charge soring option for index
+params.cal_all_pairs ='gnps' //or can be index_single and index_multi
+
 
 params.parallelism = 24
 params.networking_min_matched_peaks = 6
@@ -251,7 +251,27 @@ process calculatePairs {
     """
 }
 
-process calculatePairs_index {
+process calculatePairs_index_single {
+    publishDir "$params.publishdir/nf_output/temp_pairs", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env.yml"
+
+    input:
+    file spectrum_file
+
+    output:
+    file "*_aligns.tsv" optional true
+
+    """
+    python $TOOL_FOLDER/scripts/index_all_pairwise.py \
+    -t $spectrum_file \
+    -o 0.params_aligns.tsv\
+    --tolerance $params.fragment_tolerance \
+    --threshold $params.networking_min_cosine
+    """
+}
+
+process calculatePairs_index_multi {
     publishDir "$params.publishdir/nf_output/temp_pairs", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
@@ -268,7 +288,7 @@ process calculatePairs_index {
     -o 0.params_aligns.tsv\
     --tolerance $params.fragment_tolerance \
     --threshold $params.networking_min_cosine \
-    ${params.multi_charge == 'true' ? '--multi_charge' : ''}
+    --multi_charge
     """
 }
 // Creating the metadata file
@@ -603,8 +623,11 @@ workflow {
         params_ch = networkingGNPSPrepParams(clustered_spectra_ch)
         networking_results_temp_ch = calculatePairs(clustered_spectra_ch, params_ch.collect())
     }
-    else if (params.cal_all_pairs == "index"){
-        networking_results_temp_ch = calculatePairs_index(clustered_spectra_ch)
+    else if (params.cal_all_pairs == "index_single"){
+        networking_results_temp_ch = calculatePairs_index_single(clustered_spectra_ch)
+    }
+    else if(params.cal_all_pairs == "index_multi"){
+        networking_results_temp_ch = calculatePairs_index_multi(clustered_spectra_ch)
     }
     merged_networking_pairs_ch = networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
 

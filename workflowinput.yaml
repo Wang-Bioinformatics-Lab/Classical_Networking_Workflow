@@ -160,18 +160,10 @@ parameterlist:
       options:
         - value: "gnps"
           display: "GNPS"
-        - value: "index"
-          display: "GNPS_Index1"
-
-    - displayname: Enable Multi-Charge Scoring for GNPS Index
-      paramtype: select
-      nf_paramname: multi_charge
-      formvalue: "false"
-      options:
-        - value: "false"
-          display: No
-        - value: "true"
-          display: Yes
+        - value: "index_single"
+          display: "GNPS_Index1_single_charge"
+        - value: "index_multi"
+          display: "GNPS_Index1_multi_charge"
 
     - displayname: Network Topology Parameters
       paramtype: section
