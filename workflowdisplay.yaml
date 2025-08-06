@@ -295,6 +295,16 @@ Views:
             -   input_spectra:TASKLOCATION/[task]/input_spectra
             -   description:Downstream from [task] Classical Molecular Networking
 
+-   name: PostNetworking - MassQL Interactive Analysis
+    displayname: PostNetworking - MassQL Interactive Analysis
+    viewname: massqlpostmn
+    displaytype: linkout
+    parameters:
+        baseurl: "https://massqlpostmn.gnps2.org"
+        urlparam:
+            -   task_id:[task]
+
+
 -   name: ModiFinder - Localize Analog Modifications
     displayname: ModiFinder - Localize Analog Modifications
     viewname: high_throughput_modifinder
