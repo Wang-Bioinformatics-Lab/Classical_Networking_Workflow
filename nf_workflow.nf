@@ -28,7 +28,7 @@ params.precursor_filter = "1"
 
 // Molecular Networking Options
 params.topology = "classic" // or can be transitive
-params.cal_all_pairs ='gnps' //or can be index
+params.similarity ='gnps' //or can be index
 
 params.parallelism = 24
 params.networking_min_matched_peaks = 6
@@ -657,11 +657,11 @@ workflow {
     gnps_library_results_ch = gnps_library_results_ch.ifEmpty(file("NO_FILE"))
 
     // Networking
-    if(params.cal_all_pairs == "gnps"){
+    if(params.similarity == "gnps"){
         params_ch = networkingGNPSPrepParams(clustered_spectra_ch)
         networking_results_temp_ch = calculatePairs(clustered_spectra_ch, params_ch.collect())
     }
-    else if (params.cal_all_pairs == "index"){
+    else if (params.similarity == "index"){
         networking_results_temp_ch = calculatePairs_index(clustered_spectra_ch)
     }
     merged_networking_pairs_ch = networking_results_temp_ch.collectFile(name: "merged_pairs.tsv", storeDir: "./nf_output/networking", keepHeader: true)
