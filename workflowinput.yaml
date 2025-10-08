@@ -164,9 +164,9 @@ parameterlist:
       formplaceholder: Enter the networking_max_shift
       formvalue: "1999"
 
-    - displayname: all_pairwise_method
+    - displayname: Similarity Mode
       paramtype: select
-      nf_paramname: cal_all_pairs
+      nf_paramname: similarity
       formvalue: "gnps"
       options:
         - value: "gnps"
