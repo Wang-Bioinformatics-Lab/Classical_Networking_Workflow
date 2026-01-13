@@ -23,4 +23,4 @@ dependencies:
     - numcodecs
     - pyarrow
     - joblib
-    - git+https://github.com/XianghuWang-287/falcon.git@public-version
+    - falcon-ms

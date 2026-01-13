@@ -179,16 +179,6 @@ parameterlist:
           - key: clustering_tool
             value: "falcon"
 
-    - displayname: Clustering Tool
-      paramtype: select
-      nf_paramname: cluster_method
-      formvalue: "MS-Cluster"
-      options:
-        - value: "MS-Cluster"
-          display: "MS-Cluster"
-        - value: "Falcon"
-          display: "Falcon"
-
     - displayname: Advanced Filtering Parameters
       paramtype: section
 
