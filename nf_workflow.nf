@@ -13,13 +13,19 @@ params.metadata_per_file_grouping = "No" // Yes means that each file can be its 
 params.metadata_filename = "data/metadata.tsv"
 
 // Clustering Parameters
+params.clustering_tool = "mscluster" // or "falcon"
 params.min_cluster_size = "2"
-params.cluster_method = "MS-Cluster" // can be MS-Cluster or Falcon
-params.eps = "0.01" // eps for falcon
 
 // Tolerance Parameters
 params.pm_tolerance = "2.0"
 params.fragment_tolerance = "0.5"
+
+// Falcon-specific parameters
+params.falcon_pm_tolerance = "20 ppm"
+params.falcon_fragment_tolerance = "0.05"
+params.falcon_eps = "0.1"
+params.falcon_min_mz = "0"
+params.falcon_max_mz = "30000"
 
 // Filtering
 params.min_peak_intensity = "0.0"
@@ -116,52 +122,37 @@ process mscluster {
 }
 
 process falcon {
-    publishDir "$params.publishdir/nf_output/clustering", mode: 'copy'
+    publishDir "$params.publishdir/nf_output", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env_falcon.yml"
+    
+    // This is necessary because the glibc libraries are not always used in the conda environment, and defaults to the system which could be old
+    beforeScript 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib'
 
     input:
-    val inputSpectra
+    file inputSpectra
     val ready
 
     output:
-    file 'falcon.mgf'
-    file 'falcon.csv'
+    file 'clustering/specs_ms.mgf'
+    file 'clustering/clusterinfo.tsv'
+    file 'clustering/clustersummary.tsv'
 
     """
     mkdir clustering
-    falcon  \
-    ${inputSpectra} \
-    falcon --export_representatives \
-    --precursor_tol 0.05 Da \
-    --fragment_tol 0.05 \
-    --min_mz_range 0 \
-    --min_mz 0 \
-    --max_mz 2000 \
-    --min_samples $params.min_cluster_size \
-    --eps $params.eps --work_dir clustering \
-    --overwrite
-    """
-}
-
-process summarize_falcon {
-    publishDir "$params.publishdir/nf_output/clustering", mode: 'copy'
-
-    conda "$TOOL_FOLDER/conda_env.yml"
-
-    input:
-    file input_csv
-    file input_mgf
-
-    output:
-    file 'clusterinfo.tsv'
-    file 'clustersummary.tsv'
-    file 'specs_ms.mgf'
-
-    """
-    python $TOOL_FOLDER/scripts/summarize_results_falcon.py \
-    ${input_csv} \
-    ${input_mgf}
+    python $TOOL_FOLDER/scripts/falcon_wrapper.py \
+    $inputSpectra \
+    spectra \
+    clustering \
+    --min_cluster_size $params.min_cluster_size \
+    --pm_tolerance "$params.falcon_pm_tolerance" \
+    --fragment_tolerance $params.falcon_fragment_tolerance \
+    --min_peak_intensity $params.min_peak_intensity \
+    --window_filter $params.window_filter \
+    --precursor_filter $params.precursor_filter \
+    --eps $params.falcon_eps \
+    --min_mz $params.falcon_min_mz \
+    --max_mz $params.falcon_max_mz
     """
 }
 
@@ -611,8 +602,7 @@ process PrepareForModiFinder{
 }
 
 workflow {
-
-// Preps input spectrum files
+    // Preps input spectrum files
     input_spectra_ch = Channel.fromPath(params.input_spectra)
 
     // Downloads input data and lists privtae spectra
@@ -622,14 +612,18 @@ workflow {
     // File summaries
     filesummary(input_spectra_ch, _download_ready)
 
+    // Note: For subsequent processes (library search, networking), they use pm_tolerance and fragment_tolerance
+    // These are set to mscluster defaults. If using falcon, users should be aware that downstream processes
+    // will use the mscluster tolerance values unless they also update those parameters.
+    // This is acceptable because downstream processes work on clustered spectra, and the tolerance
+    // for library search and networking can be different from clustering tolerance.
+
     // Clustering
-    if(params.cluster_method == "MS-Cluster"){
-        (clustered_spectra_intermediate_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch, _download_ready)
+    if(params.clustering_tool == "falcon"){
+        (clustered_spectra_intermediate_ch, clusterinfo_ch, clustersummary_ch) = falcon(input_spectra_ch, _download_ready)
     }
-    else if (params.cluster_method == "Falcon"){
-        input_falcon_spectra_ch = params.input_spectra + "/*"
-        (clustered_spectra_falcon_ch, falcon_tsv_ch) = falcon(input_falcon_spectra_ch, _download_ready)
-        (clusterinfo_ch, clustersummary_ch, clustered_spectra_intermediate_ch) = summarize_falcon(falcon_tsv_ch, clustered_spectra_falcon_ch)
+    else{
+        (clustered_spectra_intermediate_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch, _download_ready)
     }
 
     if(params.massql_filter != "None"){
