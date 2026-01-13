@@ -13,11 +13,19 @@ params.metadata_per_file_grouping = "No" // Yes means that each file can be its 
 params.metadata_filename = "data/metadata.tsv"
 
 // Clustering Parameters
+params.clustering_tool = "mscluster" // or "falcon"
 params.min_cluster_size = "2"
 
 // Tolerance Parameters
 params.pm_tolerance = "2.0"
 params.fragment_tolerance = "0.5"
+
+// Falcon-specific parameters
+params.falcon_pm_tolerance = "20 ppm"
+params.falcon_fragment_tolerance = "0.05"
+params.falcon_eps = "0.1"
+params.falcon_min_mz = "0"
+params.falcon_max_mz = "30000"
 
 // Filtering
 params.min_peak_intensity = "0.0"
@@ -110,6 +118,41 @@ process mscluster {
     --min_peak_intensity $params.min_peak_intensity \
     --window_filter $params.window_filter \
     --precursor_filter $params.precursor_filter
+    """
+}
+
+process falcon {
+    publishDir "$params.publishdir/nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env_falcon.yml"
+    
+    // This is necessary because the glibc libraries are not always used in the conda environment, and defaults to the system which could be old
+    beforeScript 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib'
+
+    input:
+    file inputSpectra
+    val ready
+
+    output:
+    file 'clustering/specs_ms.mgf'
+    file 'clustering/clusterinfo.tsv'
+    file 'clustering/clustersummary.tsv'
+
+    """
+    mkdir clustering
+    python $TOOL_FOLDER/scripts/falcon_wrapper.py \
+    $inputSpectra \
+    spectra \
+    clustering \
+    --min_cluster_size $params.min_cluster_size \
+    --pm_tolerance "$params.falcon_pm_tolerance" \
+    --fragment_tolerance $params.falcon_fragment_tolerance \
+    --min_peak_intensity $params.min_peak_intensity \
+    --window_filter $params.window_filter \
+    --precursor_filter $params.precursor_filter \
+    --eps $params.falcon_eps \
+    --min_mz $params.falcon_min_mz \
+    --max_mz $params.falcon_max_mz
     """
 }
 
@@ -569,8 +612,19 @@ workflow {
     // File summaries
     filesummary(input_spectra_ch, _download_ready)
 
+    // Note: For subsequent processes (library search, networking), they use pm_tolerance and fragment_tolerance
+    // These are set to mscluster defaults. If using falcon, users should be aware that downstream processes
+    // will use the mscluster tolerance values unless they also update those parameters.
+    // This is acceptable because downstream processes work on clustered spectra, and the tolerance
+    // for library search and networking can be different from clustering tolerance.
+
     // Clustering
-    (clustered_spectra_intermediate_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch, _download_ready)
+    if(params.clustering_tool == "falcon"){
+        (clustered_spectra_intermediate_ch, clusterinfo_ch, clustersummary_ch) = falcon(input_spectra_ch, _download_ready)
+    }
+    else{
+        (clustered_spectra_intermediate_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch, _download_ready)
+    }
 
     if(params.massql_filter != "None"){
         clustered_spectra_ch = massqlFilterSpectra(clustered_spectra_intermediate_ch)
