@@ -171,11 +171,12 @@ def main():
         sys.exit(1)
     
     # Now update MGF file with correct scan numbers based on clusterinfo.tsv
-    # The scan number in MGF should match the #ClusterIdx in clusterinfo.tsv
+    # IMPORTANT: clusterinfo.tsv now uses sequential indices (1, 2, 3, ...)
+    # The scan number in MGF should match the #ClusterIdx in clusterinfo.tsv (which is already sequential)
     # Read clusterinfo to get cluster indices
     clusterinfo_df = pd.read_csv(clusterinfo_file, sep='\t')
     
-    # Get unique cluster indices (these will be the scan numbers in MGF)
+    # Get unique cluster indices (these are already sequential: 1, 2, 3, ...)
     unique_clusters = sorted(clusterinfo_df['#ClusterIdx'].unique())
     
     # Read falcon MGF file - parse manually to access cluster field
@@ -208,18 +209,42 @@ def main():
                         except:
                             pass
     
-    # Create mapping: falcon cluster (0-based) -> mscluster cluster index (1-based, which is #ClusterIdx)
-    # falcon cluster IDs in MGF are 0-based, but we converted to 1-based in clusterinfo
-    cluster_to_scan = {}
-    for cluster_idx in unique_clusters:
-        # falcon uses 0-based, mscluster uses 1-based
-        falcon_cluster = cluster_idx - 1
-        cluster_to_scan[falcon_cluster] = cluster_idx
+    # IMPORTANT: clusterinfo.tsv now uses sequential indices (1, 2, 3, ...)
+    # We need to map falcon clusters (0-based) to these sequential indices
+    # Rebuild the mapping by reading falcon.csv and matching with clusterinfo.tsv
+    # This avoids needing a separate JSON file that might not be passed through Nextflow
     
-    # Write MGF with correct scan numbers
-    # Only include spectra that correspond to clusters in clusterinfo.tsv
-    # This ensures MGF and clusterinfo.tsv are consistent
+    # Read falcon.csv to get original falcon cluster assignments
+    falcon_cluster_to_sequential = {}
+    if os.path.exists(falcon_csv):
+        falcon_df = pd.read_csv(falcon_csv, sep=',', comment='#')
+        
+        # Filter by min_cluster_size (same as in convert_falcon_to_mscluster_format.py)
+        if int(args.min_cluster_size) > 1:
+            falcon_df = falcon_df[falcon_df['cluster'] != -1]
+        
+        # Group by original falcon cluster (0-based)
+        # The sequential index in clusterinfo corresponds to the order after filtering
+        # We'll match by grouping falcon clusters and assigning sequential indices
+        original_clusters = sorted(falcon_df['cluster'].unique())
+        sequential_idx = 1
+        for orig_falcon_cluster in original_clusters:
+            # Count spectra in this cluster
+            cluster_spectra = falcon_df[falcon_df['cluster'] == orig_falcon_cluster]
+            if len(cluster_spectra) >= int(args.min_cluster_size):
+                falcon_cluster_to_sequential[orig_falcon_cluster] = sequential_idx
+                sequential_idx += 1
+        
+        print(f"Rebuilt falcon cluster mapping: {len(falcon_cluster_to_sequential)} clusters")
+    else:
+        print(f"WARNING: falcon.csv not found at {falcon_csv}, cannot rebuild mapping")
+        falcon_cluster_to_sequential = {}
+    
+    # Write MGF with sequential scan numbers matching clusterinfo.tsv
+    # Since clusterinfo.tsv already has sequential indices, we'll use them directly
     skipped_count = 0
+    processed_clusters = set()  # Track which sequential cluster indices we've processed
+    
     with open(output_mgf_filename, 'w') as out_mgf:
         for spec in mgf_spectra:
             # Get cluster ID from falcon MGF
@@ -230,12 +255,12 @@ def main():
                 except (ValueError, TypeError):
                     pass
             
-            # Only include spectra that are in clusterinfo.tsv
-            # Skip clusters that were filtered out by min_cluster_size
-            if falcon_cluster in cluster_to_scan:
-                scan_number = cluster_to_scan[falcon_cluster]
+            # Map falcon cluster (0-based) to sequential index (1-based)
+            if falcon_cluster in falcon_cluster_to_sequential:
+                sequential_idx = falcon_cluster_to_sequential[falcon_cluster]
+                scan_number = sequential_idx  # Use sequential index as SCANS
                 
-                # Write MGF entry with correct scan number
+                # Write MGF entry with sequential scan number
                 out_mgf.write("BEGIN IONS\n")
                 
                 # Write headers, updating SCANS= line
@@ -254,11 +279,17 @@ def main():
                     out_mgf.write(f"{mz} {intensity}\n")
                 
                 out_mgf.write("END IONS\n\n")
+                processed_clusters.add(sequential_idx)
             else:
-                # Skip clusters that are not in clusterinfo.tsv (filtered out by min_cluster_size)
+                # Skip clusters that are not in the mapping (filtered out by min_cluster_size)
                 skipped_count += 1
                 if falcon_cluster != -1:  # Only warn for non-singleton clusters
-                    print(f"INFO: Skipping falcon cluster {falcon_cluster} (filtered out by min_cluster_size)")
+                    print(f"INFO: Skipping falcon cluster {falcon_cluster} (filtered out by min_cluster_size or not in mapping)")
+    
+    if skipped_count > 0:
+        print(f"INFO: Skipped {skipped_count} spectra that were filtered out by min_cluster_size")
+    
+    print(f"Wrote {len(processed_clusters)} spectra to MGF file with sequential SCANS (1, 2, 3, ...)")
     
     if skipped_count > 0:
         print(f"INFO: Skipped {skipped_count} spectra that were filtered out by min_cluster_size")

@@ -120,6 +120,16 @@ def convert_falcon_to_mscluster_format(falcon_csv, input_spectra_folder, output_
     # Create DataFrame
     mscluster_df = pd.DataFrame(mscluster_rows)
     
+    # IMPORTANT: Before filtering, save the original falcon cluster ID (0-based) for each row
+    # This will help us match falcon MGF clusters to clusterinfo clusters later
+    # The original falcon cluster ID is stored in the 'cluster' column from falcon.csv
+    # We need to track: original_falcon_cluster (0-based) -> sequential_index (1-based)
+    
+    # First, add a column to track original falcon cluster (0-based) before filtering
+    # We'll need to reconstruct this from the cluster_idx we converted
+    # cluster_idx was converted from falcon's 0-based to 1-based, so original = cluster_idx - 1
+    mscluster_df['_original_falcon_cluster'] = mscluster_df['#ClusterIdx'] - 1
+    
     # Filter by min_cluster_size
     if min_cluster_size > 1:
         # Count spectra per cluster
@@ -127,9 +137,29 @@ def convert_falcon_to_mscluster_format(falcon_csv, input_spectra_folder, output_
         valid_clusters = cluster_counts[cluster_counts >= min_cluster_size].index
         mscluster_df = mscluster_df[mscluster_df['#ClusterIdx'].isin(valid_clusters)]
     
-    # Create cluster summary
+    # IMPORTANT: Remap cluster indices to sequential (1, 2, 3, ...) for consistency
+    # This ensures clusterinfo.tsv, clustersummary.tsv, and MGF SCANS all use the same sequential indices
+    # This is necessary for compatibility with ExecMolecularParallelPairs which uses index-based CLUSTERID
+    original_clusters = sorted(mscluster_df['#ClusterIdx'].unique())
+    cluster_remap = {orig: new for new, orig in enumerate(original_clusters, start=1)}
+    
+    # Create mapping: original falcon cluster (0-based) -> sequential index (1-based)
+    # This mapping will be used in falcon_wrapper.py to match MGF clusters
+    falcon_cluster_to_sequential = {}
+    for orig_cluster_idx in original_clusters:
+        original_falcon_cluster = orig_cluster_idx - 1  # Convert back to 0-based
+        sequential_idx = cluster_remap[orig_cluster_idx]
+        falcon_cluster_to_sequential[original_falcon_cluster] = sequential_idx
+    
+    # Remap #ClusterIdx in mscluster_df
+    mscluster_df['#ClusterIdx'] = mscluster_df['#ClusterIdx'].map(cluster_remap)
+    
+    # Remove the temporary column
+    mscluster_df = mscluster_df.drop(columns=['_original_falcon_cluster'])
+    
+    # Create cluster summary with remapped indices
     cluster_summary_rows = []
-    for cluster_idx in mscluster_df['#ClusterIdx'].unique():
+    for cluster_idx in sorted(mscluster_df['#ClusterIdx'].unique()):
         cluster_data = mscluster_df[mscluster_df['#ClusterIdx'] == cluster_idx]
         num_spectra = len(cluster_data)
         
@@ -167,7 +197,7 @@ def convert_falcon_to_mscluster_format(falcon_csv, input_spectra_folder, output_
         sum_precursor_intensity = cluster_data['#PrecIntensity'].sum()
         
         cluster_summary_row = {
-            'cluster index': cluster_idx,
+            'cluster index': cluster_idx,  # Already remapped to sequential
             'number of spectra': num_spectra,
             'parent mass': parent_mass,
             'precursor charge': precursor_charge,
@@ -180,6 +210,11 @@ def convert_falcon_to_mscluster_format(falcon_csv, input_spectra_folder, output_
     cluster_summary_df = pd.DataFrame(cluster_summary_rows)
     cluster_summary_df = cluster_summary_df.sort_values('cluster index')
     
+    # Ensure cluster index is string type to match network graph node types
+    # Network graph nodes from pairs file (CLUSTERID1/CLUSTERID2) are typically strings
+    # This ensures type matching when add_clusterinfo_summary_to_graph checks "if cluster_index in G"
+    cluster_summary_df['cluster index'] = cluster_summary_df['cluster index'].astype(str)
+    
     # Save outputs
     mscluster_df.to_csv(output_clusterinfo, sep='\t', index=False)
     cluster_summary_df.to_csv(output_clustersummary, sep='\t', index=False)
@@ -187,6 +222,7 @@ def convert_falcon_to_mscluster_format(falcon_csv, input_spectra_folder, output_
     print(f"Converted {len(mscluster_df)} spectra in {len(cluster_summary_df)} clusters")
     print(f"Saved clusterinfo to {output_clusterinfo}")
     print(f"Saved clustersummary to {output_clustersummary}")
+    print(f"Note: Cluster indices have been remapped to sequential (1, 2, 3, ...) for consistency")
 
 
 def main():
