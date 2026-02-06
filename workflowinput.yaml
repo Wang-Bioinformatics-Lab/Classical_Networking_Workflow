@@ -1,7 +1,7 @@
 workflowname: classical_networking_workflow
 workflowdescription: This is Classical Molecular Networking for GNPS2
 workflowlongdescription: This is Classical Molecular Networking for GNPS2
-workflowversion: "2026.01.21"
+workflowversion: "2026.02.06"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -88,6 +88,17 @@ parameterlist:
     - displayname: Clustering Parameters
       paramtype: section
     
+    - displayname: Clustering Tool
+      paramtype: select
+      nf_paramname: clustering_tool
+      formvalue: "mscluster"
+      options:
+        - value: "mscluster"
+          display: "MSCluster"
+        - value: "falcon"
+          display: "Falcon"
+      tooltip: "Select the clustering tool to use for spectral clustering"
+    
     - displayname: Minimum Cluster Size (Or Disable Clustering)
       paramtype: select
       nf_paramname: min_cluster_size
@@ -105,6 +116,68 @@ parameterlist:
           display: "4"
         - value: "5"
           display: "5"
+    
+    - displayname: Falcon Parameters
+      paramtype: section
+      showif:
+        - condition:
+          - key: clustering_tool
+            value: "falcon"
+    
+    - displayname: Precursor Ion Tolerance
+      paramtype: text
+      nf_paramname: falcon_pm_tolerance
+      formplaceholder: Enter the pm_tolerance (e.g., 20 ppm or 2.0 Da)
+      formvalue: "20 ppm"
+      tooltip: "Precursor tolerance with unit (e.g., 20 ppm or 2.0 Da)"
+      showif:
+        - condition:
+          - key: clustering_tool
+            value: "falcon"
+    
+    - displayname: Fragment Ion Tolerance
+      paramtype: text
+      nf_paramname: falcon_fragment_tolerance
+      formplaceholder: Enter the fragment_tolerance
+      formvalue: "0.05"
+      tooltip: "Fragment tolerance (Da)"
+      showif:
+        - condition:
+          - key: clustering_tool
+            value: "falcon"
+    
+    - displayname: Falcon Epsilon (eps)
+      paramtype: text
+      nf_paramname: falcon_eps
+      formplaceholder: Enter the falcon_eps
+      formvalue: "0.1"
+      tooltip: "Falcon clustering epsilon parameter (only used when clustering_tool is falcon)"
+      showif:
+        - condition:
+          - key: clustering_tool
+            value: "falcon"
+    
+    - displayname: Falcon Min MZ
+      paramtype: text
+      nf_paramname: falcon_min_mz
+      formplaceholder: Enter the falcon_min_mz
+      formvalue: "0"
+      tooltip: "Falcon minimum m/z value (only used when clustering_tool is falcon)"
+      showif:
+        - condition:
+          - key: clustering_tool
+            value: "falcon"
+    
+    - displayname: Falcon Max MZ
+      paramtype: text
+      nf_paramname: falcon_max_mz
+      formplaceholder: Enter the falcon_max_mz
+      formvalue: "30000"
+      tooltip: "Falcon maximum m/z value (only used when clustering_tool is falcon)"
+      showif:
+        - condition:
+          - key: clustering_tool
+            value: "falcon"
 
     - displayname: Advanced Filtering Parameters
       paramtype: section

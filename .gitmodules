@@ -7,3 +7,6 @@
 [submodule "bin/scripts/downloadpublicdata"]
 	path = bin/scripts/downloadpublicdata
 	url = https://github.com/Wang-Bioinformatics-Lab/downloadpublicdata.git
+[submodule "bin/NextflowModules"]
+	path = bin/NextflowModules
+	url = https://github.com/Wang-Bioinformatics-Lab/NextflowModules.git
