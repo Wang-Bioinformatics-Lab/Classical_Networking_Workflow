@@ -74,9 +74,28 @@ params.cache_directory = "data/cache"
 
 params.publishdir = "$baseDir"
 TOOL_FOLDER = "$baseDir/bin"
+MODULES_FOLDER = "$TOOL_FOLDER/NextflowModules"
+
+// COMPATIBILITY NOTE: The following might be necessary if this workflow is being deployed in a slightly different environemnt
+// checking if outdir is defined,
+// if so, then set publishdir to outdir
+if (params.outdir) {
+    _publishdir = params.outdir
+}
+else{
+    _publishdir = params.publishdir
+}
+
+// Augmenting with nf_output
+_publishdir = "${_publishdir}/nf_output"
+
+
+// A lot of useful modules are already implemented and added to the nextflow modules, you can import them to use
+// the publishdir is a key word that we're using around all our modules to control where the output files will be saved
+include {summaryLibrary} from "$MODULES_FOLDER/nf_library_search_modules.nf"
 
 process filesummary {
-    publishDir "$params.publishdir/nf_output", mode: 'copy'
+    publishDir "$_publishdir", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -530,28 +549,6 @@ process prepInputFiles {
     output_summary.tsv \
     --cache_directory $cache_directory \
     --existing_dataset_directory /data/datasets/server
-    """
-}
-
-process summaryLibrary {
-    publishDir "$params.publishdir/nf_output", mode: 'copy'
-
-    maxForks 8
-
-    cache 'lenient'
-
-    conda "$TOOL_FOLDER/conda_env.yml"
-
-    input:
-    path library_file
-
-    output:
-    path '*.tsv' optional true
-
-    """
-    python $TOOL_FOLDER/scripts/library_summary.py \
-    $library_file \
-    ${library_file}.tsv
     """
 }
 
