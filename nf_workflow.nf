@@ -575,7 +575,7 @@ process createFeatureTable {
 
 }
 
-process PrepareForModiFinder{
+process prepareForModiFinder{
     publishDir "$params.publishdir/nf_output", mode: 'copy'
 
     errorStrategy 'ignore'
@@ -701,6 +701,6 @@ workflow {
     createFeatureTable(clusterinfo_ch)
 
     // Preparing for Modifinder
-    PrepareForModiFinder(gnps_library_results_ch, filtered_networking_pairs_enriched_ch)
+    prepareForModiFinder(gnps_library_results_ch, filtered_networking_pairs_enriched_ch)
 
 }
