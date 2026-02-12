@@ -93,6 +93,7 @@ _publishdir = "${_publishdir}/nf_output"
 // A lot of useful modules are already implemented and added to the nextflow modules, you can import them to use
 // the publishdir is a key word that we're using around all our modules to control where the output files will be saved
 include {summaryLibrary} from "$MODULES_FOLDER/nf_library_search_modules.nf"
+include {librarygetGNPSAnnotations} from "$MODULES_FOLDER/nf_library_search_modules.nf" addParams(publishdir: "$_publishdir/library")
 
 process filesummary {
     publishDir "$_publishdir", mode: 'copy'
@@ -242,28 +243,28 @@ process librarymergeResults {
     """
 }
 
-process librarygetGNPSAnnotations {
-    publishDir "$params.publishdir/nf_output/library", mode: 'copy'
+// process librarygetGNPSAnnotations {
+//     publishDir "$params.publishdir/nf_output/library", mode: 'copy'
 
-    //cache 'lenient'
-    cache 'false'
+//     //cache 'lenient'
+//     cache 'false'
 
-    conda "$TOOL_FOLDER/conda_env.yml"
+//     conda "$TOOL_FOLDER/conda_env.yml"
 
-    input:
-    path "merged_results.tsv"
-    path "library_summary.tsv"
+//     input:
+//     path "merged_results.tsv"
+//     path "library_summary.tsv"
 
-    output:
-    path 'merged_results_with_gnps.tsv'
+//     output:
+//     path 'merged_results_with_gnps.tsv'
 
-    """
-    python $TOOL_FOLDER/scripts/getGNPS_library_annotations.py \
-    merged_results.tsv \
-    merged_results_with_gnps.tsv \
-    --librarysummary library_summary.tsv
-    """
-}
+//     """
+//     python $TOOL_FOLDER/scripts/getGNPS_library_annotations.py \
+//     merged_results.tsv \
+//     merged_results_with_gnps.tsv \
+//     --librarysummary library_summary.tsv
+//     """
+// }
 
 // Molecular Networking
 process networkingGNPSPrepParams {
@@ -644,7 +645,9 @@ workflow {
     library_summary_merged_ch = library_summary_ch.collectFile(name: 'librarysummary.tsv', keepHeader: true, storeDir: _publishdir + "/librarysummary")
     library_summary_merged_ch = library_summary_merged_ch.ifEmpty(file("NO_FILE"))
 
-    gnps_library_results_ch = librarygetGNPSAnnotations(merged_results_ch, library_summary_merged_ch)
+    // Getting library annotations
+    force_offline = "No" // This can be set to Yes to avoid any online queries to GNPS, which is useful for testing or if you have a local copy of the GNPS library
+    gnps_library_results_ch = librarygetGNPSAnnotations(merged_results_ch, library_summary_merged_ch, "1", "0", force_offline)
     gnps_library_results_ch = gnps_library_results_ch.ifEmpty(file("NO_FILE"))
 
     // Networking
