@@ -13,11 +13,19 @@ params.metadata_per_file_grouping = "No" // Yes means that each file can be its 
 params.metadata_filename = "data/metadata.tsv"
 
 // Clustering Parameters
+params.clustering_tool = "mscluster" // or "falcon"
 params.min_cluster_size = "2"
 
 // Tolerance Parameters
 params.pm_tolerance = "2.0"
 params.fragment_tolerance = "0.5"
+
+// Falcon-specific parameters
+params.falcon_pm_tolerance = "20 ppm"
+params.falcon_fragment_tolerance = "0.05"
+params.falcon_eps = "0.1"
+params.falcon_min_mz = "0"
+params.falcon_max_mz = "30000"
 
 // Filtering
 params.min_peak_intensity = "0.0"
@@ -66,9 +74,29 @@ params.cache_directory = "data/cache"
 
 params.publishdir = "$baseDir"
 TOOL_FOLDER = "$baseDir/bin"
+MODULES_FOLDER = "$TOOL_FOLDER/NextflowModules"
+
+// COMPATIBILITY NOTE: The following might be necessary if this workflow is being deployed in a slightly different environemnt
+// checking if outdir is defined,
+// if so, then set publishdir to outdir
+if (params.outdir) {
+    _publishdir = params.outdir
+}
+else{
+    _publishdir = params.publishdir
+}
+
+// Augmenting with nf_output
+_publishdir = "${_publishdir}/nf_output"
+
+
+// A lot of useful modules are already implemented and added to the nextflow modules, you can import them to use
+// the publishdir is a key word that we're using around all our modules to control where the output files will be saved
+include {summaryLibrary} from "$MODULES_FOLDER/nf_library_search_modules.nf"
+include {librarygetGNPSAnnotations} from "$MODULES_FOLDER/nf_library_search_modules.nf" addParams(publishdir: "$_publishdir/library")
 
 process filesummary {
-    publishDir "$params.publishdir/nf_output", mode: 'copy'
+    publishDir "$_publishdir", mode: 'copy'
 
     conda "$TOOL_FOLDER/conda_env.yml"
 
@@ -110,6 +138,41 @@ process mscluster {
     --min_peak_intensity $params.min_peak_intensity \
     --window_filter $params.window_filter \
     --precursor_filter $params.precursor_filter
+    """
+}
+
+process falcon {
+    publishDir "$params.publishdir/nf_output", mode: 'copy'
+
+    conda "$TOOL_FOLDER/conda_env_falcon.yml"
+    
+    // This is necessary because the glibc libraries are not always used in the conda environment, and defaults to the system which could be old
+    beforeScript 'export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$CONDA_PREFIX/lib'
+
+    input:
+    file inputSpectra
+    val ready
+
+    output:
+    file 'clustering/specs_ms.mgf'
+    file 'clustering/clusterinfo.tsv'
+    file 'clustering/clustersummary.tsv'
+
+    """
+    mkdir clustering
+    python $TOOL_FOLDER/scripts/falcon_wrapper.py \
+    $inputSpectra \
+    spectra \
+    clustering \
+    --min_cluster_size $params.min_cluster_size \
+    --pm_tolerance "$params.falcon_pm_tolerance" \
+    --fragment_tolerance $params.falcon_fragment_tolerance \
+    --min_peak_intensity $params.min_peak_intensity \
+    --window_filter $params.window_filter \
+    --precursor_filter $params.precursor_filter \
+    --eps $params.falcon_eps \
+    --min_mz $params.falcon_min_mz \
+    --max_mz $params.falcon_max_mz
     """
 }
 
@@ -180,28 +243,28 @@ process librarymergeResults {
     """
 }
 
-process librarygetGNPSAnnotations {
-    publishDir "$params.publishdir/nf_output/library", mode: 'copy'
+// process librarygetGNPSAnnotations {
+//     publishDir "$params.publishdir/nf_output/library", mode: 'copy'
 
-    //cache 'lenient'
-    cache 'false'
+//     //cache 'lenient'
+//     cache 'false'
 
-    conda "$TOOL_FOLDER/conda_env.yml"
+//     conda "$TOOL_FOLDER/conda_env.yml"
 
-    input:
-    path "merged_results.tsv"
-    path "library_summary.tsv"
+//     input:
+//     path "merged_results.tsv"
+//     path "library_summary.tsv"
 
-    output:
-    path 'merged_results_with_gnps.tsv'
+//     output:
+//     path 'merged_results_with_gnps.tsv'
 
-    """
-    python $TOOL_FOLDER/scripts/getGNPS_library_annotations.py \
-    merged_results.tsv \
-    merged_results_with_gnps.tsv \
-    --librarysummary library_summary.tsv
-    """
-}
+//     """
+//     python $TOOL_FOLDER/scripts/getGNPS_library_annotations.py \
+//     merged_results.tsv \
+//     merged_results_with_gnps.tsv \
+//     --librarysummary library_summary.tsv
+//     """
+// }
 
 // Molecular Networking
 process networkingGNPSPrepParams {
@@ -490,28 +553,6 @@ process prepInputFiles {
     """
 }
 
-process summaryLibrary {
-    publishDir "$params.publishdir/nf_output", mode: 'copy'
-
-    maxForks 8
-
-    cache 'lenient'
-
-    conda "$TOOL_FOLDER/conda_env.yml"
-
-    input:
-    path library_file
-
-    output:
-    path '*.tsv' optional true
-
-    """
-    python $TOOL_FOLDER/scripts/library_summary.py \
-    $library_file \
-    ${library_file}.tsv
-    """
-}
-
 process createFeatureTable {
     publishDir "$params.publishdir/nf_output/clustering", mode: 'copy'
 
@@ -535,7 +576,7 @@ process createFeatureTable {
 
 }
 
-process PrepareForModiFinder{
+process prepareForModiFinder{
     publishDir "$params.publishdir/nf_output", mode: 'copy'
 
     errorStrategy 'ignore'
@@ -569,8 +610,19 @@ workflow {
     // File summaries
     filesummary(input_spectra_ch, _download_ready)
 
+    // Note: For subsequent processes (library search, networking), they use pm_tolerance and fragment_tolerance
+    // These are set to mscluster defaults. If using falcon, users should be aware that downstream processes
+    // will use the mscluster tolerance values unless they also update those parameters.
+    // This is acceptable because downstream processes work on clustered spectra, and the tolerance
+    // for library search and networking can be different from clustering tolerance.
+
     // Clustering
-    (clustered_spectra_intermediate_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch, _download_ready)
+    if(params.clustering_tool == "falcon"){
+        (clustered_spectra_intermediate_ch, clusterinfo_ch, clustersummary_ch) = falcon(input_spectra_ch, _download_ready)
+    }
+    else{
+        (clustered_spectra_intermediate_ch, clusterinfo_ch, clustersummary_ch) = mscluster(input_spectra_ch, _download_ready)
+    }
 
     if(params.massql_filter != "None"){
         clustered_spectra_ch = massqlFilterSpectra(clustered_spectra_intermediate_ch)
@@ -590,10 +642,12 @@ workflow {
     library_summary_ch = summaryLibrary(libraries_ch)
 
     // Merging all these tsv files from library_summary_ch within nextflow
-    library_summary_merged_ch = library_summary_ch.collectFile(name: "library_summary.tsv", keepHeader: true)
+    library_summary_merged_ch = library_summary_ch.collectFile(name: 'librarysummary.tsv', keepHeader: true, storeDir: _publishdir + "/librarysummary")
     library_summary_merged_ch = library_summary_merged_ch.ifEmpty(file("NO_FILE"))
 
-    gnps_library_results_ch = librarygetGNPSAnnotations(merged_results_ch, library_summary_merged_ch)
+    // Getting library annotations
+    force_offline = "No" // This can be set to Yes to avoid any online queries to GNPS, which is useful for testing or if you have a local copy of the GNPS library
+    gnps_library_results_ch = librarygetGNPSAnnotations(merged_results_ch, library_summary_merged_ch, "1", "0", force_offline)
     gnps_library_results_ch = gnps_library_results_ch.ifEmpty(file("NO_FILE"))
 
     // Networking
@@ -650,6 +704,6 @@ workflow {
     createFeatureTable(clusterinfo_ch)
 
     // Preparing for Modifinder
-    PrepareForModiFinder(gnps_library_results_ch, filtered_networking_pairs_enriched_ch)
+    prepareForModiFinder(gnps_library_results_ch, filtered_networking_pairs_enriched_ch)
 
 }
