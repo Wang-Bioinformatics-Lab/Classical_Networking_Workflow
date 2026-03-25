@@ -112,6 +112,14 @@ Views:
         return `
             <a target="_blank" href="https://metabolomics-usi.gnps2.org/dashinterface/?usi1=mzspec:GNPS2:TASK-${task}-nf_output/clustering/specs_ms.mgf:scan:${row["#Scan#"]}&usi2=mzspec:GNPS2:TASK-${task}-input_libraries/${row["LibraryName"]}:scan:${row["LibScan"]}">View Mirror</a>
         `;}},
+        {"targets": 2,"data": null,"render": function ( data, type, row, meta ) {
+        var name = row["Compound_Name"] || "";
+        var match = name.match(/LMFA\d{8}/);
+        if (match) {
+            return `<a target="_blank" href="https://wang-bioinformatics-lab.github.io/GNPS2_Documentation/html/library_linkout.html?accession=${match[0]}">${name}</a>`;
+        }
+        return name;
+        }},
         {"targets": 10,"data": null,"render": function ( data, type, row, meta ) {
         return `
             <img src="https://structure.gnps2.org/structureimg?smiles=${encodeURIComponent(row["Smiles"])}"/>
