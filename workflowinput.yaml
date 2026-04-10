@@ -91,7 +91,7 @@ parameterlist:
     - displayname: Clustering Tool
       paramtype: select
       nf_paramname: clustering_tool
-      formvalue: "mscluster"
+      formvalue: "falcon"
       options:
         - value: "mscluster"
           display: "MSCluster"
