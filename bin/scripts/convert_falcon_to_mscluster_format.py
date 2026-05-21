@@ -5,17 +5,59 @@ import os
 import argparse
 import pandas as pd
 
+import ming_spectrum_library
+
+
+def build_precursor_intensity_lookup(input_spectra_folder, needed_basenames):
+    """Map (basename, scan) -> precursor intensity by re-reading the input spectra.
+
+    Falcon's CSV doesn't carry per-spectrum precursor intensity, so without this
+    lookup #PrecIntensity stays 0 and every column in the precursor-intensity
+    feature quant table is 0. MSCluster's binary reads the value from the input
+    mzML directly; we do the same here.
+    """
+    intensity_lookup = {}
+    if not input_spectra_folder or not os.path.isdir(input_spectra_folder):
+        print(f"WARNING: input_spectra_folder '{input_spectra_folder}' is not a directory; "
+              f"precursor intensities will default to 0")
+        return intensity_lookup
+
+    for basename in needed_basenames:
+        spectra_path = os.path.join(input_spectra_folder, basename)
+        if not os.path.isfile(spectra_path):
+            print(f"WARNING: input spectrum file not found: {spectra_path}; "
+                  f"precursor intensities for this file will default to 0")
+            continue
+        try:
+            sc = ming_spectrum_library.SpectrumCollection(spectra_path)
+            sc.load_from_file(drop_ms1=True)
+        except Exception as e:
+            print(f"WARNING: failed to read precursor intensities from {spectra_path}: {e}")
+            continue
+
+        for spectrum in sc.spectrum_list:
+            if spectrum is None:
+                continue
+            try:
+                scan_int = int(spectrum.scan)
+            except (TypeError, ValueError):
+                continue
+            intensity = getattr(spectrum, 'precursor_intensity', 0.0) or 0.0
+            intensity_lookup[(basename, scan_int)] = float(intensity)
+
+    return intensity_lookup
 
 
 def convert_falcon_to_mscluster_format(falcon_csv, input_spectra_folder, output_clusterinfo, output_clustersummary, min_cluster_size=2):
     """
     Convert falcon output to mscluster format.
-    
+
     Falcon format: cluster, filename, scan, precursor_mz, retention_time, new_batch
     MSCluster format: #ClusterIdx, #Filename, #SpecIdx, #Scan, #ParentMass, #Charge, #RetTime, #PrecIntensity
-    
-    Note: If falcon doesn't have certain fields (like charge, intensity), we use default values (0)
-    instead of fetching from MGF files.
+
+    Precursor intensity is not present in falcon's CSV, so it is looked up from
+    the original input spectra files (mzML/mzXML) using ming_spectrum_library.
+    Charge falls back to falcon's columns if available, otherwise defaults to 0.
     """
     # Load falcon CSV
     clusterinfo_df = pd.read_csv(falcon_csv, sep=',', comment='#')
@@ -46,11 +88,20 @@ def convert_falcon_to_mscluster_format(falcon_csv, input_spectra_folder, output_
     
     if min_cluster_size > 1:
         clusterinfo_df = clusterinfo_df[clusterinfo_df['cluster'] != -1]
-    
+
+    # Build (basename, scan) -> precursor intensity lookup from the original
+    # input spectra files. Falcon does not write precursor intensities into its
+    # CSV, so without this every value in the precursor-intensity feature quant
+    # table ends up as 0.
+    needed_basenames = sorted({os.path.basename(str(fn)) for fn in clusterinfo_df['filename'].unique()})
+    precursor_intensity_lookup = build_precursor_intensity_lookup(input_spectra_folder, needed_basenames)
+    print(f"Loaded precursor intensities for {len(precursor_intensity_lookup)} spectra "
+          f"across {len(needed_basenames)} input files")
+
     # Convert to mscluster format
     mscluster_rows = []
     spec_idx_counter = 0
-    
+
     for idx, row in clusterinfo_df.iterrows():
         cluster_idx = int(row['cluster'])
         
@@ -93,7 +144,12 @@ def convert_falcon_to_mscluster_format(falcon_csv, input_spectra_folder, output_
                 precursor_intensity = float(row['precursor_intensity'])
             except (ValueError, TypeError):
                 precursor_intensity = 0.0
-        
+        else:
+            precursor_intensity = precursor_intensity_lookup.get(
+                (os.path.basename(filename), scan), 0.0
+            )
+
+
         # Convert retention time to seconds if it's in minutes
         # Falcon typically outputs RT in minutes, mscluster uses seconds
         if retention_time > 0 and retention_time < 1000:  # Likely in minutes
