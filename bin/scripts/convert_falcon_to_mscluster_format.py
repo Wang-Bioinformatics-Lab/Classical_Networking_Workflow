@@ -5,16 +5,77 @@ import os
 import argparse
 import pandas as pd
 
-import ming_spectrum_library
+
+def _read_mzml_precursor_intensities(path):
+    """(scan -> precursor intensity) for MS2 spectra in an mzML file.
+
+    Reads pyteomics directly so a missing optional CV term on one spectrum
+    (e.g. 'collision energy') does not abort parsing of the whole file.
+    """
+    from pyteomics import mzml as _pmzml
+    out = {}
+    for spectrum in _pmzml.read(path):
+        if spectrum.get("ms level") != 2:
+            continue
+        scan = -1
+        for tok in spectrum.get("id", "").split():
+            if tok.startswith("scan="):
+                try:
+                    scan = int(tok.split("=", 1)[1])
+                except ValueError:
+                    pass
+            elif tok.startswith("scanId="):
+                try:
+                    scan = int(tok.split("=", 1)[1])
+                except ValueError:
+                    pass
+        if scan < 0:
+            continue
+        intensity = 0.0
+        try:
+            selected = (spectrum["precursorList"]["precursor"][0]
+                                ["selectedIonList"]["selectedIon"][0])
+            intensity = float(selected.get("peak intensity", 0.0))
+        except (KeyError, IndexError, TypeError, ValueError):
+            intensity = 0.0
+        out[scan] = intensity
+    return out
+
+
+def _read_mzxml_precursor_intensities(path):
+    """(scan -> precursor intensity) for MS2 spectra in an mzXML file."""
+    from pyteomics import mzxml as _pmzxml
+    out = {}
+    for spectrum in _pmzxml.read(path):
+        if int(spectrum.get("msLevel", 0)) != 2:
+            continue
+        try:
+            scan = int(spectrum.get("num", -1))
+        except (ValueError, TypeError):
+            scan = -1
+        if scan < 0:
+            continue
+        intensity = 0.0
+        try:
+            prec_list = spectrum.get("precursorMz") or []
+            if prec_list:
+                intensity = float(prec_list[0].get("precursorIntensity", 0.0))
+        except (KeyError, IndexError, TypeError, ValueError):
+            intensity = 0.0
+        out[scan] = intensity
+    return out
 
 
 def build_precursor_intensity_lookup(input_spectra_folder, needed_basenames):
     """Map (basename, scan) -> precursor intensity by re-reading the input spectra.
 
-    Falcon's CSV doesn't carry per-spectrum precursor intensity, so without this
-    lookup #PrecIntensity stays 0 and every column in the precursor-intensity
-    feature quant table is 0. MSCluster's binary reads the value from the input
-    mzML directly; we do the same here.
+    Falcon's CSV doesn't carry per-spectrum precursor intensity, so without
+    this lookup #PrecIntensity stays 0 and every cell of the
+    precursor-intensity feature quant table is 0. MSCluster's binary reads the
+    value from the input mzML directly; we do the same here, extracting the
+    'peak intensity' CV term of the selected precursor ion (or
+    @precursorIntensity for mzXML). MGF inputs are skipped because standard
+    MGF does not carry precursor intensity.
     """
     intensity_lookup = {}
     if not input_spectra_folder or not os.path.isdir(input_spectra_folder):
@@ -28,21 +89,22 @@ def build_precursor_intensity_lookup(input_spectra_folder, needed_basenames):
             print(f"WARNING: input spectrum file not found: {spectra_path}; "
                   f"precursor intensities for this file will default to 0")
             continue
+
+        ext = os.path.splitext(basename)[1].lower()
         try:
-            sc = ming_spectrum_library.SpectrumCollection(spectra_path)
-            sc.load_from_file(drop_ms1=True)
+            if ext == ".mzml":
+                per_file = _read_mzml_precursor_intensities(spectra_path)
+            elif ext == ".mzxml":
+                per_file = _read_mzxml_precursor_intensities(spectra_path)
+            else:
+                # MGF and unknown extensions: no per-spectrum precursor
+                # intensity available, default to 0.
+                continue
         except Exception as e:
             print(f"WARNING: failed to read precursor intensities from {spectra_path}: {e}")
             continue
 
-        for spectrum in sc.spectrum_list:
-            if spectrum is None:
-                continue
-            try:
-                scan_int = int(spectrum.scan)
-            except (TypeError, ValueError):
-                continue
-            intensity = getattr(spectrum, 'precursor_intensity', 0.0) or 0.0
+        for scan_int, intensity in per_file.items():
             intensity_lookup[(basename, scan_int)] = float(intensity)
 
     return intensity_lookup
