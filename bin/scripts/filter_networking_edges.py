@@ -26,8 +26,11 @@ def main():
     if G == None:
         exit(0)
 
-    molecular_network_filtering_library.filter_top_k(G, top_k_val)
-    molecular_network_filtering_library.filter_component(G, max_component_size)
+    # 0 disables that stage of topology filtering; the graph is still re-output.
+    if top_k_val > 0:
+        molecular_network_filtering_library.filter_top_k(G, top_k_val)
+    if max_component_size > 0:
+        molecular_network_filtering_library.filter_component(G, max_component_size)
     molecular_network_filtering_library.output_graph_with_headers(G, args.networking_pairs_results_file_filtered)
 
     #molecular_network_filtering_library.output_graph(G, args.networking_pairs_results_file_filtered_classic_output)
