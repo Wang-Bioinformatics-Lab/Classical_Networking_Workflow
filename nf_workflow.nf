@@ -645,7 +645,9 @@ workflow {
     library_summary_ch = summaryLibrary(libraries_ch)
 
     // Merging all these tsv files from library_summary_ch within nextflow
-    library_summary_merged_ch = library_summary_ch.collectFile(name: 'librarysummary.tsv', keepHeader: true, storeDir: _publishdir + "/librarysummary")
+    // Note: intentionally NOT using storeDir here so the merged library summary is kept only in the
+    // work directory (used downstream for annotations) and not published, since it takes a lot of space.
+    library_summary_merged_ch = library_summary_ch.collectFile(name: 'librarysummary.tsv', keepHeader: true)
     library_summary_merged_ch = library_summary_merged_ch.ifEmpty(file("NO_FILE"))
 
     // Getting library annotations
