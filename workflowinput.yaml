@@ -1,7 +1,7 @@
 workflowname: classical_networking_workflow
 workflowdescription: This is Classical Molecular Networking for GNPS2
 workflowlongdescription: This is Classical Molecular Networking for GNPS2
-workflowversion: "2026.06.12"
+workflowversion: "2026.07.08"
 workflowfile: nf_workflow.nf
 workflowautohide: false
 adminonly: false
@@ -293,6 +293,16 @@ parameterlist:
       nf_paramname: library_topk
       formplaceholder: Enter the topk
       formvalue: "1"
+
+    - displayname: Force Offline Annotations (speeds up workflow)
+      paramtype: select
+      nf_paramname: forceoffline
+      formvalue: "Yes"
+      options:
+        - value: "Yes"
+          display: "Yes"
+        - value: "No"
+          display: "No"
 
     
 
