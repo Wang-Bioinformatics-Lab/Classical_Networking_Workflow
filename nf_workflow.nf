@@ -64,6 +64,9 @@ params.library_filter_window = 1
 params.library_analog_search = "0"
 params.library_analog_max_shift = 1999
 
+// Parameters for Interacting with GNPS Libraries
+params.forceoffline = "Yes" // Yes or No, Yes avoids a bunch of API calls to GNPS and speeds up the workflow
+
 // Workflow Boiler Plate
 params.OMETALINKING_YAML = "flow_filelinking.yaml"
 params.OMETAPARAM_YAML = "job_parameters.yaml"
@@ -646,8 +649,7 @@ workflow {
     library_summary_merged_ch = library_summary_merged_ch.ifEmpty(file("NO_FILE"))
 
     // Getting library annotations
-    force_offline = "No" // This can be set to Yes to avoid any online queries to GNPS, which is useful for testing or if you have a local copy of the GNPS library
-    gnps_library_results_ch = librarygetGNPSAnnotations(merged_results_ch, library_summary_merged_ch, "1", "0", force_offline)
+    gnps_library_results_ch = librarygetGNPSAnnotations(merged_results_ch, library_summary_merged_ch, "1", "0", params.forceoffline)
     gnps_library_results_ch = gnps_library_results_ch.ifEmpty(file("NO_FILE"))
 
     // Networking
